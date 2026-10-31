@@ -57,7 +57,8 @@ Last updated: 2026-10-27
 | P1-38 | Implement sales orders and convert quotations/sales orders into draft invoices | DONE | SO numbering, confirmed status, invoice conversion, no accounting or stock posting |
 | P1-39 | Implement purchase requisitions with draft/submitted/approved/rejected flow | DONE | PR numbering, line estimates, approval actions, tenant-scoped API and UI |
 | P1-40 | Implement delivery notes from confirmed sales orders | DONE | DN numbering, delivered status, details and print |
-| P1-41 | Add RFQ, purchase orders, GRN, supplier bill matching, credit/debit notes, recurring invoices and full approval flows | TODO | Remaining commercial document chain |
+| P1-41 | Add supplier bill matching, credit/debit notes, recurring invoices and full approval flows | TODO | Remaining commercial document chain |
+| P1-42 | Implement RFQ, purchase orders and goods receipts with stock posting | DONE | RFQ quotes/award, PO receipt/close, GRN stock and weighted cost |
 | P1-17 | Remove/move stray root `package.json`; align env examples | DONE | Removed generated root file |
 | P1-18 | Stakeholder module: CRUD for stakeholders, linked chart-of-accounts account, ownership/type metadata | DONE | API + UI + migration |
 | P1-19 | Stakeholder transactions: capital contribution, dividend, loan, repayment, withdrawal; accounting postings | DONE | API + ledger postings |
@@ -121,14 +122,17 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
 - [x] **Purchase requisition**
   - internal request, requester, department, budget check, approval.
   - **Implemented:** `PR-` requests with draft/submitted/approved/rejected/cancelled status and estimated line totals.
-- [ ] **Request for quotation (RFQ)**
+- [x] **Request for quotation (RFQ)**
   - send to multiple suppliers, compare responses, select winner.
-- [ ] **Purchase order**
+  - **Implemented:** `RFQ-` requests with invited suppliers, per-line supplier quotes, comparison totals, award and automatic `PO-` creation.
+- [x] **Purchase order**
   - supplier, lines, expected delivery, terms, approval threshold;
   - partial receipt and close.
-- [ ] **Goods received note (GRN)**
+  - **Implemented:** `PO-` orders with draft/ordered/partially received/received/closed/cancelled status, expected date, totals and close/cancel actions.
+- [x] **Goods received note (GRN)**
   - received quantities, rejected quantities, batch/serial if needed;
   - stock and accounts payable accrual.
+  - **Implemented:** `GRN-` receipts against ordered purchase orders, received/rejected quantities, posting updates stock quantity and weighted average purchase cost. Accounts payable accrual is deferred to the accounting integration.
 - [ ] **Supplier bill matching**
   - match purchase order, GRN and supplier invoice; flag price/quantity variance.
 - [ ] **Credit note / debit note**

@@ -1008,3 +1008,221 @@ export interface PurchaseRequisitionFilterDto {
   fromDate?: string;
   toDate?: string;
 }
+
+// Request for quotation DTOs
+export interface RfqItemDto {
+  id: string;
+  itemId?: string;
+  description: string;
+  quantity: number;
+  targetUnitPrice: number;
+  lineTotal: number;
+}
+
+export interface RfqSupplierItemDto {
+  rfqItemId: string;
+  unitPrice: number;
+  lineTotal: number;
+}
+
+export interface RfqSupplierDto {
+  id: string;
+  supplierId: string;
+  supplierName: string;
+  status: string;
+  quotedAt?: string;
+  validUntil?: string;
+  total: number;
+  notes?: string;
+  items: RfqSupplierItemDto[];
+}
+
+export interface RfqDto {
+  id: string;
+  rfqNumber: string;
+  purchaseRequisitionId?: string;
+  purchaseRequisitionNumber?: string;
+  title: string;
+  issueDate: string;
+  dueDate: string;
+  status: string;
+  notes?: string;
+  currency?: string;
+  awardedSupplierId?: string;
+  awardedSupplierName?: string;
+  purchaseOrderId?: string;
+  purchaseOrderNumber?: string;
+  createdAt: string;
+  sentAt?: string;
+  awardedAt?: string;
+  totalTargetValue: number;
+  items: RfqItemDto[];
+  suppliers: RfqSupplierDto[];
+}
+
+export interface RfqItemCreateDto {
+  itemId?: string;
+  description: string;
+  quantity: number;
+  targetUnitPrice: number;
+}
+
+export interface RfqCreateDto {
+  purchaseRequisitionId?: string;
+  title: string;
+  issueDate: string;
+  dueDate: string;
+  notes?: string;
+  currency?: string;
+  items: RfqItemCreateDto[];
+  supplierIds: string[];
+}
+
+export interface RfqUpdateDto extends RfqCreateDto {}
+
+export interface RfqSupplierQuoteItemDto {
+  rfqItemId: string;
+  unitPrice: number;
+}
+
+export interface RfqSupplierQuoteDto {
+  validUntil?: string;
+  notes?: string;
+  items: RfqSupplierQuoteItemDto[];
+}
+
+export interface AwardRfqDto {
+  expectedDate?: string;
+  terms?: string;
+  notes?: string;
+}
+
+export interface RfqFilterDto {
+  search?: string;
+  status?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
+// Purchase order DTOs
+export interface PurchaseOrderItemDto {
+  id: string;
+  itemId?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  vatRate?: number;
+  discount: number;
+  lineTotal: number;
+  receivedQuantity: number;
+  rejectedQuantity: number;
+  remainingQuantity: number;
+}
+
+export interface PurchaseOrderDto {
+  id: string;
+  poNumber: string;
+  supplierId: string;
+  supplierName: string;
+  purchaseRequisitionId?: string;
+  requestForQuotationId?: string;
+  rfqNumber?: string;
+  issueDate: string;
+  expectedDate: string;
+  status: string;
+  currency?: string;
+  notes?: string;
+  terms?: string;
+  subtotal: number;
+  vatAmount: number;
+  totalDiscount: number;
+  total: number;
+  createdAt: string;
+  orderedAt?: string;
+  closedAt?: string;
+  goodsReceiptCount: number;
+  receivedValue: number;
+  items: PurchaseOrderItemDto[];
+}
+
+export interface PurchaseOrderItemCreateDto {
+  itemId?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  vatRate?: number;
+  discount: number;
+}
+
+export interface PurchaseOrderCreateDto {
+  supplierId: string;
+  purchaseRequisitionId?: string;
+  issueDate: string;
+  expectedDate: string;
+  currency?: string;
+  notes?: string;
+  terms?: string;
+  items: PurchaseOrderItemCreateDto[];
+}
+
+export interface PurchaseOrderUpdateDto extends PurchaseOrderCreateDto {}
+
+export interface PurchaseOrderFilterDto {
+  search?: string;
+  status?: string;
+  supplierId?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
+// Goods receipt DTOs
+export interface GoodsReceiptItemDto {
+  id: string;
+  purchaseOrderItemId: string;
+  description: string;
+  orderedQuantity: number;
+  receivedQuantity: number;
+  rejectedQuantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
+export interface GoodsReceiptDto {
+  id: string;
+  grnNumber: string;
+  purchaseOrderId: string;
+  poNumber: string;
+  supplierId: string;
+  supplierName: string;
+  receivedDate: string;
+  status: string;
+  notes?: string;
+  receivedByName?: string;
+  createdAt: string;
+  postedAt?: string;
+  receivedValue: number;
+  items: GoodsReceiptItemDto[];
+}
+
+export interface GoodsReceiptItemCreateDto {
+  purchaseOrderItemId: string;
+  receivedQuantity: number;
+  rejectedQuantity: number;
+}
+
+export interface GoodsReceiptCreateDto {
+  purchaseOrderId: string;
+  receivedDate: string;
+  notes?: string;
+  items: GoodsReceiptItemCreateDto[];
+}
+
+export interface GoodsReceiptUpdateDto extends GoodsReceiptCreateDto {}
+
+export interface GoodsReceiptFilterDto {
+  search?: string;
+  status?: string;
+  purchaseOrderId?: string;
+  fromDate?: string;
+  toDate?: string;
+}

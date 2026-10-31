@@ -14,6 +14,9 @@ import BuyInvoices from "./pages/BuyInvoices";
 import Quotations from "./pages/Quotations";
 import SalesOrders from "./pages/SalesOrders";
 import PurchaseRequisitions from "./pages/PurchaseRequisitions";
+import RequestForQuotations from "./pages/RequestForQuotations";
+import PurchaseOrders from "./pages/PurchaseOrders";
+import GoodsReceipts from "./pages/GoodsReceipts";
 import DeliveryNotes from "./pages/DeliveryNotes";
 import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
@@ -144,6 +147,9 @@ function AppContent() {
           <Route path="quotations" element={<Quotations />} />
           <Route path="sales-orders" element={<SalesOrders />} />
           <Route path="purchase-requisitions" element={<PurchaseRequisitions />} />
+          <Route path="rfqs" element={<RequestForQuotations />} />
+          <Route path="purchase-orders" element={<PurchaseOrders />} />
+          <Route path="goods-receipts" element={<GoodsReceipts />} />
           <Route path="delivery-notes" element={<DeliveryNotes />} />
           <Route path="buy-invoices" element={<BuyInvoices />} />
           <Route path="clients" element={<Clients />} />

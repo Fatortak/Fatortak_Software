@@ -913,6 +913,113 @@ namespace fatortak.Migrations
                     b.ToTable("GeneralVacations", "dbo");
                 });
 
+            modelBuilder.Entity("fatortak.Entities.GoodsReceiptItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("GoodsReceiptNoteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("OrderedQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("PurchaseOrderItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ReceivedQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RejectedQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GoodsReceiptNoteId");
+
+                    b.HasIndex("PurchaseOrderItemId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("GoodsReceiptItems", "dbo");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.GoodsReceiptNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GrnNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("PostedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PurchaseOrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ReceivedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ReceivedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<Guid>("SupplierId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.HasIndex("ReceivedByUserId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("TenantId", "GrnNumber")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "PurchaseOrderId");
+
+                    b.ToTable("GoodsReceiptNotes", "dbo");
+                });
+
             modelBuilder.Entity("fatortak.Entities.Installment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1555,6 +1662,160 @@ namespace fatortak.Migrations
                     b.ToTable("ProjectLines", "dbo");
                 });
 
+            modelBuilder.Entity("fatortak.Entities.PurchaseOrder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime>("ExpectedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("IssueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("OrderedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PoNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("PurchaseRequisitionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("RequestForQuotationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("RfqSupplierId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("SupplierId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Terms")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalDiscount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PurchaseRequisitionId");
+
+                    b.HasIndex("RequestForQuotationId");
+
+                    b.HasIndex("RfqSupplierId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("TenantId", "PoNumber")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "Status");
+
+                    b.ToTable("PurchaseOrders", "dbo");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.PurchaseOrderItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal>("Discount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<Guid?>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("PurchaseOrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReceivedQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RejectedQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("VatRate")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("PurchaseOrderItems", "dbo");
+                });
+
             modelBuilder.Entity("fatortak.Entities.PurchaseRequisition", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1819,6 +2080,200 @@ namespace fatortak.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("QuotationItems", "dbo");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.RequestForQuotation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("AwardedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("AwardedSupplierId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("IssueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("PurchaseRequisitionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RfqNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AwardedSupplierId");
+
+                    b.HasIndex("PurchaseRequisitionId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("TenantId", "RfqNumber")
+                        .IsUnique();
+
+                    b.ToTable("RequestForQuotations", "dbo");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.RfqItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("RequestForQuotationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("TargetUnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("RequestForQuotationId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("RfqItems", "dbo");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.RfqSupplier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("QuotedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("RequestForQuotationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<Guid>("SupplierId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("ValidUntil")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("RequestForQuotationId", "SupplierId")
+                        .IsUnique();
+
+                    b.ToTable("RfqSuppliers", "dbo");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.RfqSupplierItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("RfqItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RfqSupplierId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RfqItemId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("RfqSupplierId", "RfqItemId")
+                        .IsUnique();
+
+                    b.ToTable("RfqSupplierItems", "dbo");
                 });
 
             modelBuilder.Entity("fatortak.Entities.Stakeholder", b =>
@@ -2393,6 +2848,67 @@ namespace fatortak.Migrations
                     b.Navigation("WorkSetting");
                 });
 
+            modelBuilder.Entity("fatortak.Entities.GoodsReceiptItem", b =>
+                {
+                    b.HasOne("fatortak.Entities.GoodsReceiptNote", "GoodsReceiptNote")
+                        .WithMany("Items")
+                        .HasForeignKey("GoodsReceiptNoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.PurchaseOrderItem", "PurchaseOrderItem")
+                        .WithMany("GoodsReceiptItems")
+                        .HasForeignKey("PurchaseOrderItemId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("GoodsReceiptNote");
+
+                    b.Navigation("PurchaseOrderItem");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.GoodsReceiptNote", b =>
+                {
+                    b.HasOne("fatortak.Entities.PurchaseOrder", "PurchaseOrder")
+                        .WithMany("GoodsReceipts")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.ApplicationUser", "ReceivedByUser")
+                        .WithMany()
+                        .HasForeignKey("ReceivedByUserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("fatortak.Entities.Customer", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("PurchaseOrder");
+
+                    b.Navigation("ReceivedByUser");
+
+                    b.Navigation("Supplier");
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("fatortak.Entities.Installment", b =>
                 {
                     b.HasOne("fatortak.Entities.Invoice", "Invoice")
@@ -2630,6 +3146,79 @@ namespace fatortak.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("fatortak.Entities.PurchaseOrder", b =>
+                {
+                    b.HasOne("fatortak.Entities.PurchaseRequisition", "PurchaseRequisition")
+                        .WithMany()
+                        .HasForeignKey("PurchaseRequisitionId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("fatortak.Entities.RequestForQuotation", "RequestForQuotation")
+                        .WithMany()
+                        .HasForeignKey("RequestForQuotationId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("fatortak.Entities.RfqSupplier", "RfqSupplier")
+                        .WithMany()
+                        .HasForeignKey("RfqSupplierId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("fatortak.Entities.Customer", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("PurchaseRequisition");
+
+                    b.Navigation("RequestForQuotation");
+
+                    b.Navigation("RfqSupplier");
+
+                    b.Navigation("Supplier");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.PurchaseOrderItem", b =>
+                {
+                    b.HasOne("fatortak.Entities.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("fatortak.Entities.PurchaseOrder", "PurchaseOrder")
+                        .WithMany("Items")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("PurchaseOrder");
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("fatortak.Entities.PurchaseRequisition", b =>
                 {
                     b.HasOne("fatortak.Entities.ApplicationUser", "ApprovedByUser")
@@ -2740,6 +3329,118 @@ namespace fatortak.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("fatortak.Entities.RequestForQuotation", b =>
+                {
+                    b.HasOne("fatortak.Entities.Customer", "AwardedSupplier")
+                        .WithMany()
+                        .HasForeignKey("AwardedSupplierId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("fatortak.Entities.PurchaseRequisition", "PurchaseRequisition")
+                        .WithMany()
+                        .HasForeignKey("PurchaseRequisitionId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("fatortak.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("AwardedSupplier");
+
+                    b.Navigation("PurchaseRequisition");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.RfqItem", b =>
+                {
+                    b.HasOne("fatortak.Entities.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("fatortak.Entities.RequestForQuotation", "RequestForQuotation")
+                        .WithMany("Items")
+                        .HasForeignKey("RequestForQuotationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("RequestForQuotation");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.RfqSupplier", b =>
+                {
+                    b.HasOne("fatortak.Entities.RequestForQuotation", "RequestForQuotation")
+                        .WithMany("Suppliers")
+                        .HasForeignKey("RequestForQuotationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.Customer", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("RequestForQuotation");
+
+                    b.Navigation("Supplier");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.RfqSupplierItem", b =>
+                {
+                    b.HasOne("fatortak.Entities.RfqItem", "RfqItem")
+                        .WithMany("Quotes")
+                        .HasForeignKey("RfqItemId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.RfqSupplier", "RfqSupplier")
+                        .WithMany("Items")
+                        .HasForeignKey("RfqSupplierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("RfqItem");
+
+                    b.Navigation("RfqSupplier");
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("fatortak.Entities.Stakeholder", b =>
                 {
                     b.HasOne("fatortak.Entities.Account", "Account")
@@ -2846,6 +3547,11 @@ namespace fatortak.Migrations
                     b.Navigation("Attendances");
                 });
 
+            modelBuilder.Entity("fatortak.Entities.GoodsReceiptNote", b =>
+                {
+                    b.Navigation("Items");
+                });
+
             modelBuilder.Entity("fatortak.Entities.Invoice", b =>
                 {
                     b.Navigation("Installments");
@@ -2877,12 +3583,41 @@ namespace fatortak.Migrations
                     b.Navigation("Transactions");
                 });
 
+            modelBuilder.Entity("fatortak.Entities.PurchaseOrder", b =>
+                {
+                    b.Navigation("GoodsReceipts");
+
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.PurchaseOrderItem", b =>
+                {
+                    b.Navigation("GoodsReceiptItems");
+                });
+
             modelBuilder.Entity("fatortak.Entities.PurchaseRequisition", b =>
                 {
                     b.Navigation("Items");
                 });
 
             modelBuilder.Entity("fatortak.Entities.Quotation", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.RequestForQuotation", b =>
+                {
+                    b.Navigation("Items");
+
+                    b.Navigation("Suppliers");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.RfqItem", b =>
+                {
+                    b.Navigation("Quotes");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.RfqSupplier", b =>
                 {
                     b.Navigation("Items");
                 });

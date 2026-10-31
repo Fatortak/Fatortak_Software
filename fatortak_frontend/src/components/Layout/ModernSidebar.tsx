@@ -135,6 +135,21 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
       path: "/purchase-requisitions",
     },
     {
+      name: isRTL ? "طلبات عروض الأسعار" : "Request for Quotations",
+      icon: ClipboardList,
+      path: "/rfqs",
+    },
+    {
+      name: isRTL ? "أوامر الشراء" : "Purchase Orders",
+      icon: ShoppingCart,
+      path: "/purchase-orders",
+    },
+    {
+      name: isRTL ? "إذون الاستلام" : "Goods Receipts",
+      icon: Package2,
+      path: "/goods-receipts",
+    },
+    {
       name: t("sellInvoices") || "Sales Invoices",
       icon: Receipt,
       path: "/sell-invoices",
