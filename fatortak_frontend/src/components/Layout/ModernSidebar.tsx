@@ -130,6 +130,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
       path: "/buy-invoices",
     },
     {
+      name: isRTL ? "طلبات الشراء" : "Purchase Requisitions",
+      icon: ClipboardList,
+      path: "/purchase-requisitions",
+    },
+    {
       name: t("sellInvoices") || "Sales Invoices",
       icon: Receipt,
       path: "/sell-invoices",

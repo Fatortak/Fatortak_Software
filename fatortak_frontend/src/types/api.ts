@@ -960,3 +960,51 @@ export interface ConvertQuotationResultDto {
   invoiceNumber: string;
   status: string;
 }
+
+// Purchase requisition DTOs
+export interface PurchaseRequisitionItemDto {
+  id: string;
+  description: string;
+  quantity: number;
+  estimatedUnitPrice: number;
+  lineTotal: number;
+}
+
+export interface PurchaseRequisitionDto {
+  id: string;
+  requestNumber: string;
+  title: string;
+  requesterName?: string;
+  approvedByName?: string;
+  neededBy: string;
+  status: string;
+  notes?: string;
+  total: number;
+  createdAt: string;
+  submittedAt?: string;
+  approvedAt?: string;
+  rejectedAt?: string;
+  items: PurchaseRequisitionItemDto[];
+}
+
+export interface PurchaseRequisitionItemCreateDto {
+  description: string;
+  quantity: number;
+  estimatedUnitPrice: number;
+}
+
+export interface PurchaseRequisitionCreateDto {
+  title: string;
+  neededBy: string;
+  notes?: string;
+  items: PurchaseRequisitionItemCreateDto[];
+}
+
+export interface PurchaseRequisitionUpdateDto extends PurchaseRequisitionCreateDto {}
+
+export interface PurchaseRequisitionFilterDto {
+  search?: string;
+  status?: string;
+  fromDate?: string;
+  toDate?: string;
+}

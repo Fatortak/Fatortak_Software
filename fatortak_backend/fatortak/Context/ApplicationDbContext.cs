@@ -28,6 +28,8 @@ namespace fatortak.Context
         public DbSet<InvoiceItem> InvoiceItems { get; set; }
         public DbSet<Quotation> Quotations { get; set; }
         public DbSet<QuotationItem> QuotationItems { get; set; }
+        public DbSet<PurchaseRequisition> PurchaseRequisitions { get; set; }
+        public DbSet<PurchaseRequisitionItem> PurchaseRequisitionItems { get; set; }
         public DbSet<Expenses> Expenses { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<Notification> Notifications { get; set; }

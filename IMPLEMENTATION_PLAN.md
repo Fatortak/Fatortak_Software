@@ -55,7 +55,8 @@ Last updated: 2026-10-27
 | P1-36 | Implement quotation module and convert an accepted quotation into a draft sales invoice | DONE | QUO numbering, status flow, duplicate, print and draft-invoice conversion |
 | P1-37 | Polish specialist surfaces: public invoice, print templates and accessibility QA | DONE | Public token view, template line totals, print rules, shell and form accessibility |
 | P1-38 | Implement sales orders and convert quotations/sales orders into draft invoices | DONE | SO numbering, confirmed status, invoice conversion, no accounting or stock posting |
-| P1-39 | Add delivery notes, purchase requisition/RFQ/PO/GRN, credit/debit notes and approval flows | TODO | Remaining commercial document chain |
+| P1-39 | Implement purchase requisitions with draft/submitted/approved/rejected flow | DONE | PR numbering, line estimates, approval actions, tenant-scoped API and UI |
+| P1-40 | Add delivery notes, RFQ, purchase orders, GRN, supplier bill matching, credit/debit notes and approval flows | TODO | Remaining commercial document chain |
 | P1-17 | Remove/move stray root `package.json`; align env examples | DONE | Removed generated root file |
 | P1-18 | Stakeholder module: CRUD for stakeholders, linked chart-of-accounts account, ownership/type metadata | DONE | API + UI + migration |
 | P1-19 | Stakeholder transactions: capital contribution, dividend, loan, repayment, withdrawal; accounting postings | DONE | API + ledger postings |
@@ -115,8 +116,9 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
 - [ ] **Delivery note / goods issue**
   - quantities delivered, remaining quantities, customer signature/reference;
   - stock movement only on delivery.
-- [ ] **Purchase requisition**
+- [x] **Purchase requisition**
   - internal request, requester, department, budget check, approval.
+  - **Implemented:** `PR-` requests with draft/submitted/approved/rejected/cancelled status and estimated line totals.
 - [ ] **Request for quotation (RFQ)**
   - send to multiple suppliers, compare responses, select winner.
 - [ ] **Purchase order**

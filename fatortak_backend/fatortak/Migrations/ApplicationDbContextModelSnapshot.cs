@@ -1555,6 +1555,110 @@ namespace fatortak.Migrations
                     b.ToTable("ProjectLines", "dbo");
                 });
 
+            modelBuilder.Entity("fatortak.Entities.PurchaseRequisition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ApprovedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("NeededBy")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RequestNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedByUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("TenantId", "RequestNumber")
+                        .IsUnique();
+
+                    b.ToTable("PurchaseRequisitions", "dbo");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.PurchaseRequisitionItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal>("EstimatedUnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("PurchaseRequisitionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PurchaseRequisitionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("PurchaseRequisitionItems", "dbo");
+                });
+
             modelBuilder.Entity("fatortak.Entities.Quotation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2526,6 +2630,50 @@ namespace fatortak.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("fatortak.Entities.PurchaseRequisition", b =>
+                {
+                    b.HasOne("fatortak.Entities.ApplicationUser", "ApprovedByUser")
+                        .WithMany()
+                        .HasForeignKey("ApprovedByUserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("fatortak.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("ApprovedByUser");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.PurchaseRequisitionItem", b =>
+                {
+                    b.HasOne("fatortak.Entities.PurchaseRequisition", "PurchaseRequisition")
+                        .WithMany("Items")
+                        .HasForeignKey("PurchaseRequisitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("PurchaseRequisition");
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("fatortak.Entities.Quotation", b =>
                 {
                     b.HasOne("fatortak.Entities.Branch", "Branch")
@@ -2727,6 +2875,11 @@ namespace fatortak.Migrations
                     b.Navigation("ProjectLines");
 
                     b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.PurchaseRequisition", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("fatortak.Entities.Quotation", b =>

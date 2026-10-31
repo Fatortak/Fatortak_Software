@@ -13,6 +13,7 @@ import SellInvoices from "./pages/SellInvoices";
 import BuyInvoices from "./pages/BuyInvoices";
 import Quotations from "./pages/Quotations";
 import SalesOrders from "./pages/SalesOrders";
+import PurchaseRequisitions from "./pages/PurchaseRequisitions";
 import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
 import Suppliers from "./pages/Suppliers";
@@ -141,6 +142,7 @@ function AppContent() {
           <Route path="sell-invoices" element={<SellInvoices />} />
           <Route path="quotations" element={<Quotations />} />
           <Route path="sales-orders" element={<SalesOrders />} />
+          <Route path="purchase-requisitions" element={<PurchaseRequisitions />} />
           <Route path="buy-invoices" element={<BuyInvoices />} />
           <Route path="clients" element={<Clients />} />
            <Route path="items" element={<Items />} />
