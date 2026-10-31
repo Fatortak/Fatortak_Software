@@ -42,6 +42,8 @@ const statusTone = (status: string) => {
       return "border-sky-100 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300";
     case "Invoiced":
       return "border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300";
+    case "Delivered":
+      return "border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300";
     case "Rejected":
     case "Expired":
       return "border-rose-100 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300";
@@ -103,7 +105,9 @@ const QuotationDetailsModal: React.FC<QuotationDetailsModalProps> = ({
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 {quotation.documentType === "SalesOrder"
                   ? isRTL ? "أمر بيع" : "Sales order"
-                  : isRTL ? "عرض سعر" : "Quotation"}
+                  : quotation.documentType === "DeliveryNote"
+                    ? isRTL ? "إذن تسليم" : "Delivery note"
+                    : isRTL ? "عرض سعر" : "Quotation"}
               </p>
             </div>
             <Badge className={statusTone(quotation.status)}>

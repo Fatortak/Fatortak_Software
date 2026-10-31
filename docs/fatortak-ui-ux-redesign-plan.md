@@ -25,14 +25,15 @@ Shipped in the current rollout:
 - Quotations: list, builder, status flow, duplicate, details/print and conversion to a draft sales invoice.
 - Sales orders: list, confirmed/invoiced status, details and conversion to a draft invoice.
 - Purchase requisitions: requests, estimated lines, approval flow and status filters.
+- Delivery notes: generated from confirmed sales orders, listed separately with details and print.
 
 Still to do:
 
 - Public invoice and print templates: final production logo/large-list spot check and cross-browser PDF check.
 - A full accessibility audit: screen-reader certification and automated axe checks.
 - Storybook/visual regression for the shared primitives.
-- The remaining commercial document chain: delivery notes, RFQ/purchase orders/GRN, supplier bill matching, credit/debit notes and approvals.
-- Quotations, sales orders and purchase requisitions are implemented end to end.
+- The remaining commercial document chain: RFQ, purchase orders, GRN, supplier bill matching, credit/debit notes, recurring invoices and full approvals.
+- Quotations, sales orders, purchase requisitions and delivery notes are implemented end to end.
 
 ---
 

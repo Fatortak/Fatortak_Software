@@ -112,3 +112,15 @@ export const useConvertToSalesOrder = () => {
     },
   });
 };
+
+export const useConvertToDeliveryNote = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      unwrapServiceResult(quotationService.convertToDeliveryNote(id)),
+    onSuccess: () => {
+      invalidate(queryClient);
+      queryClient.invalidateQueries({ queryKey: ["delivery-notes"] });
+    },
+  });
+};

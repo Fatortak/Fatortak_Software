@@ -15,6 +15,7 @@ namespace fatortak.Services.QuotationService
         Task<ServiceResult<bool>> SendQuotationAsync(Guid quotationId);
         Task<ServiceResult<QuotationDto>> DuplicateQuotationAsync(Guid quotationId);
         Task<ServiceResult<QuotationDto>> ConvertToSalesOrderAsync(Guid quotationId);
+        Task<ServiceResult<QuotationDto>> ConvertToDeliveryNoteAsync(Guid salesOrderId);
         Task<ServiceResult<ConvertQuotationResultDto>> ConvertToInvoiceAsync(
             Guid quotationId, ConvertQuotationDto dto);
     }

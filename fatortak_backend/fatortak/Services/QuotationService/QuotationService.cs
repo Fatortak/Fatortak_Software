@@ -163,7 +163,7 @@ namespace fatortak.Services.QuotationService
                     return ServiceResult<QuotationDto>.Failure("Company not found");
 
                 var last = await _context.Quotations
-                    .Where(q => q.TenantId == TenantId)
+                    .Where(q => q.TenantId == TenantId && q.DocumentType == "Quotation")
                     .OrderByDescending(q => q.CreatedAt)
                     .Select(q => q.QuotationNumber)
                     .FirstOrDefaultAsync();
@@ -384,7 +384,7 @@ namespace fatortak.Services.QuotationService
                     return ServiceResult<QuotationDto>.Failure("Quotation not found");
 
                 var last = await _context.Quotations
-                    .Where(q => q.TenantId == TenantId)
+                    .Where(q => q.TenantId == TenantId && q.DocumentType == source.DocumentType)
                     .OrderByDescending(q => q.CreatedAt)
                     .Select(q => q.QuotationNumber)
                     .FirstOrDefaultAsync();
@@ -392,7 +392,10 @@ namespace fatortak.Services.QuotationService
                 var copy = new Quotation
                 {
                     TenantId = TenantId,
-                    QuotationNumber = GenerateNumber(last),
+                    QuotationNumber = GenerateNumberWithPrefix(
+                        source.DocumentType == "SalesOrder" ? "SO-" :
+                        source.DocumentType == "DeliveryNote" ? "DN-" : QuotationPrefix,
+                        last),
                     DocumentType = source.DocumentType,
                     SourceQuotationId = source.SourceQuotationId,
                     CustomerId = source.CustomerId,
@@ -508,6 +511,80 @@ namespace fatortak.Services.QuotationService
             {
                 _logger.LogError(ex, "Error converting quotation {QuotationId} to sales order", quotationId);
                 return ServiceResult<QuotationDto>.Failure("Failed to create sales order");
+            }
+        }
+
+        public async Task<ServiceResult<QuotationDto>> ConvertToDeliveryNoteAsync(Guid salesOrderId)
+        {
+            try
+            {
+                var order = await GetWithRelations(salesOrderId);
+                if (order == null)
+                    return ServiceResult<QuotationDto>.Failure("Sales order not found");
+
+                if (order.DocumentType != "SalesOrder")
+                    return ServiceResult<QuotationDto>.Failure("Only a sales order can produce a delivery note.");
+
+                if (order.Status != "Confirmed")
+                    return ServiceResult<QuotationDto>.Failure("Only a confirmed sales order can be delivered.");
+
+                var exists = await _context.Quotations.AnyAsync(q =>
+                    q.TenantId == TenantId &&
+                    q.DocumentType == "DeliveryNote" &&
+                    q.SourceQuotationId == order.Id);
+                if (exists)
+                    return ServiceResult<QuotationDto>.Failure("A delivery note already exists for this sales order.");
+
+                var last = await _context.Quotations
+                    .Where(q => q.TenantId == TenantId && q.DocumentType == "DeliveryNote")
+                    .OrderByDescending(q => q.CreatedAt)
+                    .Select(q => q.QuotationNumber)
+                    .FirstOrDefaultAsync();
+
+                var delivery = new Quotation
+                {
+                    TenantId = TenantId,
+                    QuotationNumber = GenerateNumberWithPrefix("DN-", last),
+                    DocumentType = "DeliveryNote",
+                    SourceQuotationId = order.Id,
+                    CustomerId = order.CustomerId,
+                    BranchId = order.BranchId,
+                    ProjectId = order.ProjectId,
+                    UserId = TryGetUserId(),
+                    IssueDate = DateTime.UtcNow,
+                    ValidUntil = order.ValidUntil,
+                    Status = "Delivered",
+                    ConfirmedAt = DateTime.UtcNow,
+                    Currency = order.Currency,
+                    Notes = order.Notes,
+                    Terms = order.Terms,
+                    Subtotal = order.Subtotal,
+                    VatAmount = order.VatAmount,
+                    TotalDiscount = order.TotalDiscount,
+                    Total = order.Total,
+                    Items = order.Items.Select(i => new QuotationItem
+                    {
+                        TenantId = TenantId,
+                        ItemId = i.ItemId,
+                        Description = i.Description,
+                        Quantity = i.Quantity,
+                        UnitPrice = i.UnitPrice,
+                        VatRate = i.VatRate,
+                        Discount = i.Discount,
+                        LineTotal = i.LineTotal
+                    }).ToList()
+                };
+
+                _context.Quotations.Add(delivery);
+                await _context.SaveChangesAsync();
+                _context.ChangeTracker.Clear();
+                var saved = await GetWithRelations(delivery.Id);
+                return ServiceResult<QuotationDto>.SuccessResult(MapToDto(saved!));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating delivery note for sales order {SalesOrderId}", salesOrderId);
+                return ServiceResult<QuotationDto>.Failure("Failed to create delivery note");
             }
         }
 
@@ -730,8 +807,13 @@ namespace fatortak.Services.QuotationService
             };
         }
 
-        private static string GenerateNumber(string? lastNumber) =>
-            GenerateNumberWithPrefix(QuotationPrefix, lastNumber);
+        private static string GenerateNumber(string? lastNumber)
+        {
+            var match = Regex.Match(lastNumber ?? string.Empty, @"\d+$");
+            if (match.Success && long.TryParse(match.Value, out var number))
+                return $"{QuotationPrefix}{(number + 1).ToString().PadLeft(4, '0')}";
+            return $"{QuotationPrefix}0001";
+        }
 
         private static string GenerateNumberWithPrefix(string prefix, string? lastNumber)
         {

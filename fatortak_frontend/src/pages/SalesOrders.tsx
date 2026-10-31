@@ -30,7 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useConvertQuotation, useQuotations } from "@/hooks/useQuotations";
+import { useConvertQuotation, useConvertToDeliveryNote, useQuotations } from "@/hooks/useQuotations";
 import QuotationDetailsModal from "@/components/modals/QuotationDetailsModal";
 import { formatCurrency } from "@/Helpers/formatCurrency";
 import type { QuotationDto } from "@/types/api";
@@ -55,6 +55,7 @@ const SalesOrders: React.FC = () => {
   const [pagination, setPagination] = useState({ pageNumber: 1, pageSize: 10 });
   const [details, setDetails] = useState<QuotationDto | null>(null);
   const convertMutation = useConvertQuotation();
+  const deliveryMutation = useConvertToDeliveryNote();
 
   const { data: response, isLoading } = useQuotations(pagination, {
     documentType: "SalesOrder",
@@ -76,6 +77,19 @@ const SalesOrders: React.FC = () => {
       );
     } catch (error: any) {
       toast.error(error?.message || "Could not convert sales order");
+    }
+  };
+
+  const handleDelivery = async (order: QuotationDto) => {
+    try {
+      const result = await deliveryMutation.mutateAsync(order.id);
+      toast.success(
+        isRTL
+          ? `تم إنشاء إذن التسليم ${result.data?.quotationNumber}`
+          : `Delivery note ${result.data?.quotationNumber} created`
+      );
+    } catch (error: any) {
+      toast.error(error?.message || "Could not create delivery note");
     }
   };
 
@@ -216,6 +230,17 @@ const SalesOrders: React.FC = () => {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
+                        {order.status === "Confirmed" && (
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => handleDelivery(order)}
+                            aria-label="Create delivery note"
+                            title="Create delivery note"
+                          >
+                            <Truck className="h-4 w-4 text-emerald-600" />
+                          </Button>
+                        )}
                         {order.status === "Confirmed" && (
                           <Button
                             variant="ghost"

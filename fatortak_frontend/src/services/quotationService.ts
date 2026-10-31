@@ -56,6 +56,9 @@ export const quotationService = {
   convertToSalesOrder: async (id: string) =>
     apiClient.post<QuotationDto>(`/api/quotations/${id}/convert-to-sales-order`),
 
+  convertToDeliveryNote: async (id: string) =>
+    apiClient.post<QuotationDto>(`/api/quotations/${id}/convert-to-delivery-note`),
+
   convertToInvoice: async (id: string, data: ConvertQuotationDto = {}) =>
     apiClient.post<ConvertQuotationResultDto>(
       `/api/quotations/${id}/convert-to-invoice`,

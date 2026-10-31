@@ -92,6 +92,13 @@ namespace fatortak.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [HttpPost("{quotationId}/convert-to-delivery-note")]
+        public async Task<ActionResult<ServiceResult<QuotationDto>>> ConvertToDeliveryNote(Guid quotationId)
+        {
+            var result = await _quotationService.ConvertToDeliveryNoteAsync(quotationId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [HttpPost("{quotationId}/convert-to-invoice")]
         public async Task<ActionResult<ServiceResult<ConvertQuotationResultDto>>> ConvertToInvoice(
             Guid quotationId, [FromBody] ConvertQuotationDto dto)

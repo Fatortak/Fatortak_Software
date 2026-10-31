@@ -56,7 +56,8 @@ Last updated: 2026-10-27
 | P1-37 | Polish specialist surfaces: public invoice, print templates and accessibility QA | DONE | Public token view, template line totals, print rules, shell and form accessibility |
 | P1-38 | Implement sales orders and convert quotations/sales orders into draft invoices | DONE | SO numbering, confirmed status, invoice conversion, no accounting or stock posting |
 | P1-39 | Implement purchase requisitions with draft/submitted/approved/rejected flow | DONE | PR numbering, line estimates, approval actions, tenant-scoped API and UI |
-| P1-40 | Add delivery notes, RFQ, purchase orders, GRN, supplier bill matching, credit/debit notes and approval flows | TODO | Remaining commercial document chain |
+| P1-40 | Implement delivery notes from confirmed sales orders | DONE | DN numbering, delivered status, details and print |
+| P1-41 | Add RFQ, purchase orders, GRN, supplier bill matching, credit/debit notes, recurring invoices and full approval flows | TODO | Remaining commercial document chain |
 | P1-17 | Remove/move stray root `package.json`; align env examples | DONE | Removed generated root file |
 | P1-18 | Stakeholder module: CRUD for stakeholders, linked chart-of-accounts account, ownership/type metadata | DONE | API + UI + migration |
 | P1-19 | Stakeholder transactions: capital contribution, dividend, loan, repayment, withdrawal; accounting postings | DONE | API + ledger postings |
@@ -113,9 +114,10 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
   - convert to invoice or delivery note;
   - cancel/close with reason.
   - **Implemented:** accepted quotations convert to `SO-` orders, listed at `/sales-orders`, and confirmed orders convert to draft invoices.
-- [ ] **Delivery note / goods issue**
+- [x] **Delivery note / goods issue**
   - quantities delivered, remaining quantities, customer signature/reference;
   - stock movement only on delivery.
+  - **Implemented:** `DN-` delivery notes generated from confirmed sales orders, with details and print. Stock posting is intentionally deferred until the stock integration is scoped.
 - [x] **Purchase requisition**
   - internal request, requester, department, budget check, approval.
   - **Implemented:** `PR-` requests with draft/submitted/approved/rejected/cancelled status and estimated line totals.
