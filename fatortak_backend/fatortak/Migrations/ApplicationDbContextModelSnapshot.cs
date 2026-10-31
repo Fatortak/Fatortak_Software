@@ -1570,6 +1570,9 @@ namespace fatortak.Migrations
                     b.Property<Guid?>("BranchId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("ConfirmedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("ConvertedAt")
                         .HasColumnType("datetime2");
 
@@ -1585,6 +1588,11 @@ namespace fatortak.Migrations
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<DateTime>("IssueDate")
                         .HasColumnType("datetime2");
@@ -1602,6 +1610,9 @@ namespace fatortak.Migrations
 
                     b.Property<DateTime?>("SentAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("SourceQuotationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1648,6 +1659,8 @@ namespace fatortak.Migrations
                     b.HasIndex("ProjectId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("TenantId", "DocumentType");
 
                     b.HasIndex("TenantId", "QuotationNumber")
                         .IsUnique();

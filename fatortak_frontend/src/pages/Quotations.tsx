@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Check,
   CheckCircle2,
+  ClipboardList,
   Edit,
   Eye,
   FileText,
@@ -44,6 +45,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import {
   useConvertQuotation,
+  useConvertToSalesOrder,
   useDeleteQuotation,
   useQuotations,
   useSendQuotation,
@@ -91,6 +93,7 @@ const Quotations: React.FC = () => {
   const sendMutation = useSendQuotation();
   const statusMutation = useUpdateQuotationStatus();
   const convertMutation = useConvertQuotation();
+  const salesOrderMutation = useConvertToSalesOrder();
 
   const quotations = response?.success ? response.data?.data || [] : [];
   const stats: any = response?.success ? response.data?.metaData || {} : {};
@@ -130,6 +133,19 @@ const Quotations: React.FC = () => {
       );
     } catch (error: any) {
       toast.error(error?.message || "Could not convert quotation");
+    }
+  };
+
+  const handleSalesOrder = async (quotation: QuotationDto) => {
+    try {
+      const result = await salesOrderMutation.mutateAsync(quotation.id);
+      toast.success(
+        isRTL
+          ? `تم إنشاء أمر البيع ${result.data?.quotationNumber}`
+          : `Sales order ${result.data?.quotationNumber} created`
+      );
+    } catch (error: any) {
+      toast.error(error?.message || "Could not create sales order");
     }
   };
 
@@ -341,6 +357,17 @@ const Quotations: React.FC = () => {
                         {roleAccess.canEdit() && ["Draft", "Sent"].includes(quotation.status) && (
                           <Button variant="ghost" size="icon-sm" onClick={() => handleAccept(quotation)} title="Accept" aria-label="Accept quotation">
                             <Check className="h-4 w-4 text-emerald-600" />
+                          </Button>
+                        )}
+                        {roleAccess.canEdit() && quotation.status === "Accepted" && (
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => handleSalesOrder(quotation)}
+                            title="Create sales order"
+                            aria-label="Convert quotation to sales order"
+                          >
+                            <ClipboardList className="h-4 w-4 text-sky-600" />
                           </Button>
                         )}
                         {roleAccess.canEdit() && canConvert(quotation) && (

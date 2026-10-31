@@ -11,6 +11,7 @@ namespace fatortak.FluentApiConfiguration
             builder.ToTable("Quotations");
             builder.HasKey(q => q.Id);
             builder.Property(q => q.QuotationNumber).HasMaxLength(50).IsRequired();
+            builder.Property(q => q.DocumentType).HasMaxLength(30).IsRequired();
             builder.Property(q => q.Status).HasMaxLength(30).IsRequired();
             builder.Property(q => q.Currency).HasMaxLength(10);
             builder.Property(q => q.Subtotal).HasPrecision(18, 2);
@@ -18,6 +19,7 @@ namespace fatortak.FluentApiConfiguration
             builder.Property(q => q.TotalDiscount).HasPrecision(18, 2);
             builder.Property(q => q.Total).HasPrecision(18, 2);
             builder.HasIndex(q => new { q.TenantId, q.QuotationNumber }).IsUnique();
+            builder.HasIndex(q => new { q.TenantId, q.DocumentType });
 
             builder.HasOne(q => q.Tenant)
                 .WithMany()

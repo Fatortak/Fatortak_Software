@@ -37,6 +37,11 @@ namespace fatortak.Services.QuotationService
                     .Where(q => q.TenantId == TenantId)
                     .AsQueryable();
 
+                var documentType = string.IsNullOrWhiteSpace(filter.DocumentType)
+                    ? "Quotation"
+                    : filter.DocumentType;
+                query = query.Where(q => q.DocumentType == documentType);
+
                 if (!string.IsNullOrWhiteSpace(filter.Search))
                 {
                     var term = filter.Search.ToLower();
@@ -86,6 +91,8 @@ namespace fatortak.Services.QuotationService
                         sent = g.Count(q => q.Status == "Sent"),
                         accepted = g.Count(q => q.Status == "Accepted"),
                         converted = g.Count(q => q.Status == "Converted"),
+                        confirmed = g.Count(q => q.Status == "Confirmed"),
+                        invoiced = g.Count(q => q.Status == "Invoiced"),
                         rejected = g.Count(q => q.Status == "Rejected"),
                         totalAmount = g.Sum(q => q.Total)
                     })
@@ -96,6 +103,8 @@ namespace fatortak.Services.QuotationService
                         sent = 0,
                         accepted = 0,
                         converted = 0,
+                        confirmed = 0,
+                        invoiced = 0,
                         rejected = 0,
                         totalAmount = 0m
                     };
@@ -170,6 +179,7 @@ namespace fatortak.Services.QuotationService
                 {
                     TenantId = TenantId,
                     QuotationNumber = number,
+                    DocumentType = "Quotation",
                     CustomerId = dto.CustomerId,
                     BranchId = dto.BranchId,
                     ProjectId = dto.ProjectId,
@@ -383,6 +393,8 @@ namespace fatortak.Services.QuotationService
                 {
                     TenantId = TenantId,
                     QuotationNumber = GenerateNumber(last),
+                    DocumentType = source.DocumentType,
+                    SourceQuotationId = source.SourceQuotationId,
                     CustomerId = source.CustomerId,
                     BranchId = source.BranchId,
                     ProjectId = source.ProjectId,
@@ -422,6 +434,83 @@ namespace fatortak.Services.QuotationService
             }
         }
 
+        public async Task<ServiceResult<QuotationDto>> ConvertToSalesOrderAsync(Guid quotationId)
+        {
+            try
+            {
+                var quotation = await GetWithRelations(quotationId);
+                if (quotation == null)
+                    return ServiceResult<QuotationDto>.Failure("Quotation not found");
+
+                if (quotation.DocumentType != "Quotation")
+                    return ServiceResult<QuotationDto>.Failure("Only a quotation can be converted to a sales order.");
+
+                if (quotation.Status != "Accepted")
+                    return ServiceResult<QuotationDto>.Failure("Accept the quotation before converting it to a sales order.");
+
+                if (quotation.ValidUntil.Date < DateTime.UtcNow.Date)
+                    return ServiceResult<QuotationDto>.Failure("This quotation has expired.");
+
+                var exists = await _context.Quotations.AnyAsync(q =>
+                    q.TenantId == TenantId &&
+                    q.DocumentType == "SalesOrder" &&
+                    q.SourceQuotationId == quotation.Id);
+                if (exists)
+                    return ServiceResult<QuotationDto>.Failure("A sales order already exists for this quotation.");
+
+                var last = await _context.Quotations
+                    .Where(q => q.TenantId == TenantId && q.DocumentType == "SalesOrder")
+                    .OrderByDescending(q => q.CreatedAt)
+                    .Select(q => q.QuotationNumber)
+                    .FirstOrDefaultAsync();
+
+                var order = new Quotation
+                {
+                    TenantId = TenantId,
+                    QuotationNumber = GenerateNumberWithPrefix("SO-", last),
+                    DocumentType = "SalesOrder",
+                    SourceQuotationId = quotation.Id,
+                    CustomerId = quotation.CustomerId,
+                    BranchId = quotation.BranchId,
+                    ProjectId = quotation.ProjectId,
+                    UserId = TryGetUserId(),
+                    IssueDate = DateTime.UtcNow,
+                    ValidUntil = quotation.ValidUntil,
+                    Status = "Confirmed",
+                    ConfirmedAt = DateTime.UtcNow,
+                    Currency = quotation.Currency,
+                    Notes = quotation.Notes,
+                    Terms = quotation.Terms,
+                    Subtotal = quotation.Subtotal,
+                    VatAmount = quotation.VatAmount,
+                    TotalDiscount = quotation.TotalDiscount,
+                    Total = quotation.Total,
+                    Items = quotation.Items.Select(i => new QuotationItem
+                    {
+                        TenantId = TenantId,
+                        ItemId = i.ItemId,
+                        Description = i.Description,
+                        Quantity = i.Quantity,
+                        UnitPrice = i.UnitPrice,
+                        VatRate = i.VatRate,
+                        Discount = i.Discount,
+                        LineTotal = i.LineTotal
+                    }).ToList()
+                };
+
+                _context.Quotations.Add(order);
+                await _context.SaveChangesAsync();
+                _context.ChangeTracker.Clear();
+                var saved = await GetWithRelations(order.Id);
+                return ServiceResult<QuotationDto>.SuccessResult(MapToDto(saved!));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error converting quotation {QuotationId} to sales order", quotationId);
+                return ServiceResult<QuotationDto>.Failure("Failed to create sales order");
+            }
+        }
+
         public async Task<ServiceResult<ConvertQuotationResultDto>> ConvertToInvoiceAsync(
             Guid quotationId, ConvertQuotationDto dto)
         {
@@ -432,11 +521,16 @@ namespace fatortak.Services.QuotationService
                 if (quotation == null)
                     return ServiceResult<ConvertQuotationResultDto>.Failure("Quotation not found");
 
-                if (quotation.ConvertedInvoiceId.HasValue || quotation.Status == "Converted")
-                    return ServiceResult<ConvertQuotationResultDto>.Failure("This quotation has already been converted.");
+                if (quotation.ConvertedInvoiceId.HasValue ||
+                    quotation.Status == "Converted" ||
+                    quotation.Status == "Invoiced")
+                    return ServiceResult<ConvertQuotationResultDto>.Failure("This document has already been converted.");
 
                 if (quotation.Status is "Rejected" or "Cancelled")
-                    return ServiceResult<ConvertQuotationResultDto>.Failure("Rejected or cancelled quotations cannot be converted.");
+                    return ServiceResult<ConvertQuotationResultDto>.Failure("Rejected or cancelled documents cannot be converted.");
+
+                if (quotation.DocumentType == "SalesOrder" && quotation.Status != "Confirmed")
+                    return ServiceResult<ConvertQuotationResultDto>.Failure("Only a confirmed sales order can be converted.");
 
                 if (quotation.ValidUntil.Date < DateTime.UtcNow.Date)
                     return ServiceResult<ConvertQuotationResultDto>.Failure("This quotation has expired.");
@@ -489,7 +583,9 @@ namespace fatortak.Services.QuotationService
                 _context.Invoices.Add(invoice);
                 await _context.SaveChangesAsync();
 
-                quotation.Status = QuotationStatus.Converted.ToString();
+                quotation.Status = quotation.DocumentType == "SalesOrder"
+                    ? "Invoiced"
+                    : QuotationStatus.Converted.ToString();
                 quotation.ConvertedAt = DateTime.UtcNow;
                 quotation.ConvertedInvoiceId = invoice.Id;
                 quotation.UpdatedAt = DateTime.UtcNow;
@@ -592,6 +688,8 @@ namespace fatortak.Services.QuotationService
             {
                 Id = quotation.Id,
                 QuotationNumber = quotation.QuotationNumber,
+                DocumentType = quotation.DocumentType,
+                SourceQuotationId = quotation.SourceQuotationId,
                 CustomerId = quotation.CustomerId,
                 CustomerName = quotation.Customer?.Name,
                 CustomerPhoneNumber = quotation.Customer?.Phone,
@@ -612,6 +710,7 @@ namespace fatortak.Services.QuotationService
                 CreatedAt = quotation.CreatedAt,
                 SentAt = quotation.SentAt,
                 AcceptedAt = quotation.AcceptedAt,
+                ConfirmedAt = quotation.ConfirmedAt,
                 ConvertedAt = quotation.ConvertedAt,
                 ConvertedInvoiceId = quotation.ConvertedInvoiceId,
                 DaysUntilExpiry = (quotation.ValidUntil.Date - today).Days,
@@ -631,20 +730,23 @@ namespace fatortak.Services.QuotationService
             };
         }
 
-        private static string GenerateNumber(string? lastNumber)
+        private static string GenerateNumber(string? lastNumber) =>
+            GenerateNumberWithPrefix(QuotationPrefix, lastNumber);
+
+        private static string GenerateNumberWithPrefix(string prefix, string? lastNumber)
         {
             if (string.IsNullOrEmpty(lastNumber))
-                return $"{QuotationPrefix}0001";
+                return $"{prefix}0001";
 
             var match = Regex.Match(lastNumber, @"\d+$");
             if (match.Success && long.TryParse(match.Value, out var number))
             {
-                var prefix = lastNumber[..match.Index];
+                var numberPrefix = lastNumber[..match.Index];
                 var next = number + 1;
-                return $"{prefix}{next.ToString().PadLeft(match.Value.Length, '0')}";
+                return $"{numberPrefix}{next.ToString().PadLeft(match.Value.Length, '0')}";
             }
 
-            return $"{QuotationPrefix}0001";
+            return $"{prefix}0001";
         }
 
         private static string GenerateInvoiceNumber(string? prefix, string? lastNumber)

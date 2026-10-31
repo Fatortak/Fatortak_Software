@@ -140,6 +140,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
       path: "/quotations",
     },
     {
+      name: isRTL ? "أوامر البيع" : "Sales Orders",
+      icon: Truck,
+      path: "/sales-orders",
+    },
+    {
       name: t("expenses") || "Expenses",
       icon: DollarSign,
       path: "/expenses-group",

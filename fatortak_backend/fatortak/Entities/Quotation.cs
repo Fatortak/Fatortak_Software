@@ -6,6 +6,8 @@ namespace fatortak.Entities
         public Guid TenantId { get; set; }
         public Guid? BranchId { get; set; }
         public string QuotationNumber { get; set; } = string.Empty;
+        public string DocumentType { get; set; } = "Quotation";
+        public Guid? SourceQuotationId { get; set; }
         public Guid CustomerId { get; set; }
         public Guid? UserId { get; set; }
         public DateTime IssueDate { get; set; }
@@ -24,6 +26,7 @@ namespace fatortak.Entities
         public DateTime? UpdatedAt { get; set; }
         public DateTime? SentAt { get; set; }
         public DateTime? AcceptedAt { get; set; }
+        public DateTime? ConfirmedAt { get; set; }
         public DateTime? ConvertedAt { get; set; }
         public Guid? ConvertedInvoiceId { get; set; }
 

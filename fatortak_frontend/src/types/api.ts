@@ -883,6 +883,8 @@ export interface QuotationItemDto {
 export interface QuotationDto {
   id: string;
   quotationNumber: string;
+  documentType?: string;
+  sourceQuotationId?: string;
   customerId: string;
   customerName?: string;
   customerPhoneNumber?: string;
@@ -903,6 +905,7 @@ export interface QuotationDto {
   createdAt: string;
   sentAt?: string;
   acceptedAt?: string;
+  confirmedAt?: string;
   convertedAt?: string;
   convertedInvoiceId?: string;
   daysUntilExpiry: number;
@@ -937,6 +940,7 @@ export interface QuotationUpdateDto extends QuotationCreateDto {}
 
 export interface QuotationFilterDto {
   search?: string;
+  documentType?: string;
   customerId?: string;
   status?: string;
   fromDate?: string;

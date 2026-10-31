@@ -100,3 +100,15 @@ export const useConvertQuotation = () => {
     },
   });
 };
+
+export const useConvertToSalesOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      unwrapServiceResult(quotationService.convertToSalesOrder(id)),
+    onSuccess: () => {
+      invalidate(queryClient);
+      queryClient.invalidateQueries({ queryKey: ["sales-orders"] });
+    },
+  });
+};

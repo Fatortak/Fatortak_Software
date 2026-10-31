@@ -56,6 +56,8 @@ namespace fatortak.Dtos.Quotation
     {
         public Guid Id { get; set; }
         public string QuotationNumber { get; set; } = string.Empty;
+        public string DocumentType { get; set; } = "Quotation";
+        public Guid? SourceQuotationId { get; set; }
         public Guid CustomerId { get; set; }
         public string? CustomerName { get; set; }
         public string? CustomerPhoneNumber { get; set; }
@@ -76,6 +78,7 @@ namespace fatortak.Dtos.Quotation
         public DateTime CreatedAt { get; set; }
         public DateTime? SentAt { get; set; }
         public DateTime? AcceptedAt { get; set; }
+        public DateTime? ConfirmedAt { get; set; }
         public DateTime? ConvertedAt { get; set; }
         public Guid? ConvertedInvoiceId { get; set; }
         public int DaysUntilExpiry { get; set; }
@@ -86,6 +89,7 @@ namespace fatortak.Dtos.Quotation
     public class QuotationFilterDto
     {
         public string? Search { get; set; }
+        public string? DocumentType { get; set; }
         public Guid? CustomerId { get; set; }
         public string? Status { get; set; }
         public DateTime? FromDate { get; set; }

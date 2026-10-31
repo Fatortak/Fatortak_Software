@@ -54,7 +54,8 @@ Last updated: 2026-10-27
 | P1-35 | Roll out redesigned tables, forms, modals and page templates to all modules | DONE | Shared primitives, page hero, dashboard, lists, forms, reports, settings, auth and dark mode migrated; typecheck/lint/build/browser checks pass |
 | P1-36 | Implement quotation module and convert an accepted quotation into a draft sales invoice | DONE | QUO numbering, status flow, duplicate, print and draft-invoice conversion |
 | P1-37 | Polish specialist surfaces: public invoice, print templates and accessibility QA | DONE | Public token view, template line totals, print rules, shell and form accessibility |
-| P1-38 | Add sales orders, delivery notes, purchase requisition/RFQ/PO/GRN, credit/debit notes and approval flows | TODO | Remaining commercial document chain |
+| P1-38 | Implement sales orders and convert quotations/sales orders into draft invoices | DONE | SO numbering, confirmed status, invoice conversion, no accounting or stock posting |
+| P1-39 | Add delivery notes, purchase requisition/RFQ/PO/GRN, credit/debit notes and approval flows | TODO | Remaining commercial document chain |
 | P1-17 | Remove/move stray root `package.json`; align env examples | DONE | Removed generated root file |
 | P1-18 | Stakeholder module: CRUD for stakeholders, linked chart-of-accounts account, ownership/type metadata | DONE | API + UI + migration |
 | P1-19 | Stakeholder transactions: capital contribution, dividend, loan, repayment, withdrawal; accounting postings | DONE | API + ledger postings |
@@ -106,10 +107,11 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
   - convert accepted quotation to sales order or invoice;
   - optional approval before sending.
   - **Implemented:** `Quotations`/`QuotationItems` tables, `QUO-` numbering, status API, duplicate, details/print dialog and conversion to a draft sales invoice.
-- [ ] **Sales order**
+- [x] **Sales order**
   - confirmed customer commitment, delivery date, partial fulfilment;
   - convert to invoice or delivery note;
   - cancel/close with reason.
+  - **Implemented:** accepted quotations convert to `SO-` orders, listed at `/sales-orders`, and confirmed orders convert to draft invoices.
 - [ ] **Delivery note / goods issue**
   - quantities delivered, remaining quantities, customer signature/reference;
   - stock movement only on delivery.

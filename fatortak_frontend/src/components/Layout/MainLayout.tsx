@@ -77,7 +77,7 @@ const MainLayout: React.FC = () => {
     >
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+        className="absolute start-4 top-0 z-[100] -translate-y-full rounded-b-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-transform focus:translate-y-0"
       >
         {isRTL ? "انتقل إلى المحتوى" : "Skip to content"}
       </a>

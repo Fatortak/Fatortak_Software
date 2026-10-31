@@ -23,14 +23,15 @@ Shipped in the current rollout:
 - Modal footers, compact table density, consistent status tinting and mobile 2-column KPI cards.
 - Notification, profile, AI chat, OCR, subscription-plan and payment surfaces aligned to the same system.
 - Quotations: list, builder, status flow, duplicate, details/print and conversion to a draft sales invoice.
+- Sales orders: list, confirmed/invoiced status, details and conversion to a draft invoice.
 
 Still to do:
 
 - Public invoice and print templates: final production logo/large-list spot check and cross-browser PDF check.
 - A full accessibility audit: screen-reader certification and automated axe checks.
 - Storybook/visual regression for the shared primitives.
-- The remaining commercial document chain: sales orders, delivery notes, purchasing documents, credit/debit notes and approvals.
-- Quotations themselves are implemented end to end.
+- The remaining commercial document chain: delivery notes, purchasing documents, credit/debit notes and approvals.
+- Quotations and sales orders are implemented end to end.
 
 ---
 
