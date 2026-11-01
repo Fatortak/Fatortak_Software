@@ -3,6 +3,7 @@ import {
   Plus,
   Pencil,
   Trash2,
+  Download,
   Wallet,
   TrendingUp,
   Users,
@@ -149,6 +150,20 @@ const Stakeholders = () => {
     }
     toast.success("Stakeholder deleted.");
     load();
+  };
+
+  const exportStatement = async (item: StakeholderDto) => {
+    try {
+      const blob = await stakeholderService.exportStatement(item.id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `stakeholder-statement-${item.name.replace(/\s+/g, "-")}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to export statement.");
+    }
   };
 
   const openTransactions = async (item: StakeholderDto) => {
@@ -361,6 +376,13 @@ const Stakeholders = () => {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-1">
+                        <button
+                          onClick={() => exportStatement(item)}
+                          className="rounded-lg p-2 text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-900/30"
+                          title="Export statement"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
                         <button
                           onClick={() => openTransactions(item)}
                           className="rounded-lg p-2 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-900/30"

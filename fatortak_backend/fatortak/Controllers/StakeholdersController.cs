@@ -82,5 +82,49 @@ namespace fatortak.Controllers
             var result = await _service.GetStatementAsync(id);
             return result.Success ? Ok(result) : NotFound(result);
         }
+
+        [HttpGet("{id:guid}/statement/export")]
+        public async Task<IActionResult> ExportStatement(Guid id)
+        {
+            var result = await _service.GetStatementAsync(id);
+            if (!result.Success || result.Data == null) return NotFound(result);
+
+            var statement = result.Data;
+            var builder = new System.Text.StringBuilder();
+            builder.AppendLine("Stakeholder,Type,Date,TransactionType,Amount,Reference,Description");
+            foreach (var transaction in statement.Transactions.OrderBy(t => t.Date))
+            {
+                var values = new[]
+                {
+                    statement.Stakeholder.Name,
+                    statement.Stakeholder.Type.ToString(),
+                    transaction.Date.ToString("yyyy-MM-dd"),
+                    transaction.Type.ToString(),
+                    transaction.Amount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                    transaction.Reference ?? string.Empty,
+                    transaction.Description ?? string.Empty
+                };
+                builder.AppendLine(string.Join(",", values.Select(EscapeCsv)));
+            }
+            builder.AppendLine();
+            builder.AppendLine($"Capital balance,{statement.CapitalBalance:0.00}");
+            builder.AppendLine($"Loan balance,{statement.LoanBalance:0.00}");
+            builder.AppendLine($"Net position,{statement.NetPosition:0.00}");
+
+            var safeName = string.Concat(statement.Stakeholder.Name
+                .Where(ch => char.IsLetterOrDigit(ch) || ch is '-' or '_'))
+                .Trim();
+            return File(
+                System.Text.Encoding.UTF8.GetBytes(builder.ToString()),
+                "text/csv",
+                $"stakeholder-statement-{safeName}.csv");
+        }
+
+        private static string EscapeCsv(string value)
+        {
+            if (value.Contains(',') || value.Contains('"') || value.Contains('\n'))
+                return $"\"{value.Replace("\"", "\"\"")}\"";
+            return value;
+        }
     }
 }

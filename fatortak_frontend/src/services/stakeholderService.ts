@@ -82,6 +82,8 @@ export const stakeholderService = {
     ),
   removeTransaction: (transactionId: string) =>
     apiClient.delete<boolean>(`/api/stakeholders/transactions/${transactionId}`),
+  exportStatement: (id: string) =>
+    apiClient.getBlob(`/api/stakeholders/${id}/statement/export`),
 };
 
 export type { ServiceResult };
