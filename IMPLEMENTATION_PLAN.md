@@ -154,10 +154,12 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
   - invoice, quotation, purchase order, expense, payment, discount and credit-note approvals;
   - thresholds, approver roles, audit trail, mobile approval.
   - **Implemented:** generic approval queue for invoices, quotations, purchase orders, expenses, credit/debit notes and payments; policy thresholds and enable/disable per type; administrator-only decisions; requester/decision audit fields; responsive approval UI.
-- [ ] **Numbering and document versions**
+- [x] **Numbering and document versions**
   - separate sequences per document type; immutable issued documents; revision history.
+  - **Implemented:** document revision history for invoices, quotations, purchase orders, goods receipts, requisitions, RFQs and recurring schedules, with change/snapshot capture and a per-document history dialog. Strong immutability of posted documents remains a follow-up.
 - [ ] **Customer/supplier portal**
   - accept quotation, download statements, upload payment proof, raise support request.
+  - **Deferred:** portal code lives in separate sector repositories per the product decision; this repo only exposes APIs.
 
 ### Competitor parity backlog
 
@@ -170,12 +172,12 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
 - [x] Inventory valuation and stock adjustments.
 - [x] VAT return pack and e-invoicing export.
 - [ ] Multi-currency and exchange-rate revaluation.
-- [ ] Saved views, bulk actions, and CSV import.
+- [x] Saved views, bulk actions, and CSV import.
 - [x] Global search and command palette.
 - [ ] Role/permission matrix editor.
-- [ ] Onboarding checklist and demo dataset.
-- [ ] Document revision history and immutable issued documents.
-- [ ] Stakeholder statement export.
+- [x] Onboarding checklist and demo dataset.
+- [x] Document revision history.
+- [x] Stakeholder statement export.
 - [ ] Real Egypt ETA / Saudi ZATCA e-invoice integration.
 
 ### Self-hosted mode
@@ -186,8 +188,8 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
 - [x] Registration joins the installation tenant; optional registration lock.
 - [x] Registered user count, online-in-last-5-minutes count, data counts.
 - [x] Installation insights page for administrators.
-- [ ] Session table with device/IP history (currently uses `LastSeenAt`).
-- [ ] Upgrade/backup status on the insights page.
+- [x] Session table with device/IP history and user session revocation.
+- [x] Upgrade/backup status on the insights page.
 
 ## UI professionalization
 
@@ -236,20 +238,38 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
 - 2026-11-01: global search (`/api/search`) and Ctrl/Cmd+K command palette across customers, suppliers, items, invoices, quotations, purchase orders and projects.
 - 2026-11-01: backend build succeeds; `dotnet test` 10/10; `npm run build` succeeds; targeted ESLint passes; SQLite test compatibility fixed by removing the SQL Server-only `nvarchar(max)` audit column annotation.
 - 2026-11-01: real SQL Server smoke tests passed for audit capture, bank statement import/match/ignore/adjustment/reconcile, price resolution, commission generate/approve/pay, stock adjustment valuation update, VAT return, e-invoice export and global search.
+- 2026-11-01: document revision history (`20261101123618_AddDocumentRevisions`) with automatic snapshots and change sets, API and history dialogs for invoices, quotations and purchase orders.
+- 2026-11-01: device/session management (`20261101130739_AddUserSessions`) with IP/user-agent history, current-device detection, revoke-one/revoke-others APIs, `/sessions` UI and middleware rejection of revoked sessions.
+- 2026-11-01: CSV import for customers/suppliers/items, per-user/shared saved views, and bulk customer/item delete/activate actions.
+- 2026-11-01: onboarding checklist plus idempotent demo dataset (customers, suppliers, items, project and draft quotation).
+- 2026-11-01: stakeholder statement CSV export.
+- 2026-11-01: frontend Vitest + React Testing Library harness, 7 passing tests; CI now runs frontend tests, gitleaks, NuGet vulnerability audit and `npm audit --audit-level=high`.
+- 2026-11-01: CSP/Permissions-Policy headers added to Nginx and PII inventory/retention review documented in `docs/security/csp-and-pii-review.md`.
+- 2026-11-01: vulnerable NuGet packages upgraded (`Microsoft.Data.SqlClient` 5.2.2, `Azure.Identity` 1.13.1, `System.Formats.Asn1` 8.0.1, `SQLitePCLRaw.lib.e_sqlite3` latest) and `jspdf` upgraded to 4.2.1; projects now report no vulnerable packages and no high/critical npm advisories.
+- 2026-11-01: backend `dotnet test` 10/10 and frontend `npm test` 7/7 after dependency upgrades; production build succeeds.
 
-## Remaining work (next commits)
+## Remaining work
 
 | Area | Remaining |
 |---|---|
-| Security | Refresh-token rotation; CSP at the Nginx layer; 2FA/SSO; session/device management; PII retention review |
+| Security | Refresh-token rotation; CSP nonce rollout to remove `style-src 'unsafe-inline'`; 2FA/SSO; PII retention cleanup job |
 | Data isolation | Add EF Core global query filters as defense in depth; finish IDOR audit on every controller |
 | Accounting | Add automated journal-balance tests for every posting path; reconcile cheque lifecycle; payroll transaction guard |
-| Commercial | Customer/supplier portal and payment links (separate portal repos); document revision history; saved views, bulk actions and CSV import; role/permission matrix editor; onboarding checklist and demo dataset; multi-currency and revaluation; stakeholder statement export |
+| Commercial | Customer/supplier portal and payment links (separate portal repos); role/permission matrix editor; multi-currency and exchange-rate revaluation; hard immutability for posted documents |
 | Tax | Real Egypt ETA / Saudi ZATCA submission adapters and credentials |
-| Self-hosted | Session/device history table; backup and upgrade status on the insights page |
-| UI | Full design-token pass and professional review of older pages; code splitting; mobile QA |
-| Quality | Frontend tests; CI secret scan; dependency audit; load test |
+| Self-hosted | Backup/upgrade automation (status reporting is implemented) |
+| UI | Full design-token pass and professional review of older pages; accessibility audit; Storybook/visual regression; code splitting; mobile QA |
+| Quality | Load test; broader frontend coverage for critical flows |
 | Marketing | Uncommitted `marketing/` changes are intentionally excluded until reviewed and scanned separately |
+
+### Deferred with rationale
+
+- **Customer/supplier portal and payment links:** portal code belongs in separate sector repositories; payment links need a chosen gateway and signing keys.
+- **Role/permission matrix editor:** the current authorization model uses fixed role checks; replacing it requires a permission-policy refactor and a role-migration plan.
+- **Multi-currency and revaluation:** requires base-currency settings, FX rate sources, revaluation policy and accounting sign-off; implementing it without those decisions would produce unreliable ledger entries.
+- **2FA and SSO:** TOTP and external identity providers need recovery-code policy, provider selection and tenant-level enforcement rules.
+- **Real ETA/ZATCA integration:** blocked on taxpayer credentials, certificate signing and official schema/version confirmation.
+- **Real payment links / gateway capture:** blocked on gateway selection and merchant credentials.
 
 ## Guardrails
 

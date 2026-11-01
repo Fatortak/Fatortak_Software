@@ -40,6 +40,11 @@ Shipped in the current rollout:
 - Inventory valuation: cost valuation, low-stock flags, stock adjustments and weighted average cost at `/inventory`.
 - Tax reporting: VAT return summary, line-level detail and JSON e-invoice export at `/tax-reports`.
 - Global search: Ctrl/Cmd+K command palette and `/api/search` across customers, suppliers, items, invoices, quotations, purchase orders and projects.
+- Document history: revision snapshots and change sets for invoices, quotations and purchase orders.
+- Sessions and devices: `/sessions` device history, current-device marker, revoke-one and sign-out-others.
+- Data operations: `/data-import` CSV import for customers/suppliers/items, bulk customer actions and saved activity views.
+- Onboarding: `/onboarding` checklist with progress and an idempotent demo dataset.
+- Stakeholder statements: CSV export from the stakeholders page.
 
 Still to do:
 
@@ -48,8 +53,10 @@ Still to do:
 - Storybook/visual regression for the shared primitives.
 - Multi-step approval chains (single-step administrator approval is live).
 - Customer/supplier portal and payment links (separate portal repositories).
-- Document revision history, saved views/bulk actions/CSV import, role/permission matrix editor and demo dataset.
-- Frontend automated tests and mobile QA.
+- Role/permission matrix editor.
+- Multi-currency and exchange-rate revaluation.
+- 2FA/SSO and refresh-token rotation.
+- Mobile QA and broader frontend coverage for critical flows.
 
 ---
 
@@ -727,4 +734,4 @@ Build/standardize in `src/components/ui`:
 - No page uses a one-off gradient, button, table or modal unless documented.
 - Dashboard, invoice, report and settings task completion improves in usability testing.
 
-Implementation status: foundation and core rollout are in place, including the full quote-to-cash and procure-to-pay document chains, audit, reconciliation, pricing, commissions, inventory, tax and global search. Remaining work is tracked in section 0 and in `IMPLEMENTATION_PLAN.md`.
+Implementation status: foundation, core rollout, the full commercial document chain, audit, reconciliation, pricing, commissions, inventory, tax, global search, revisions, sessions, data operations and onboarding are in place. Remaining work is tracked in section 0 and in `IMPLEMENTATION_PLAN.md`.
