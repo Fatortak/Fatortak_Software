@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="Fatortak — the open-source business OS for MENA" width="100%" />
+  <img src="https://raw.githubusercontent.com/Fatortak/Fatortak_Marketing/main/landing/assets/brand/cover-readme.png" alt="Fatortak — run the whole business in one place" width="100%" />
 </p>
 
 <h1 align="center">Fatortak · فاتورتك</h1>
@@ -14,6 +14,7 @@
   <a href="docs/self-hosting.md">Self-hosting</a> ·
   <a href="CONTRIBUTING.md">Contributing</a> ·
   <a href="docs/roadmap.md">Roadmap</a> ·
+  <a href="https://github.com/Fatortak/Fatortak_Marketing">Marketing</a> ·
   <a href="#-commercial-support">Commercial support</a>
 </p>
 
@@ -46,8 +47,8 @@ Most accounting platforms are built for the US or Europe first. Fatortak is buil
 Fatortak is a real application, not a landing-page mockup. The screens below are captures of the running application with demo data:
 
 <p align="center">
-  <img src="marketing/landing/assets/screenshots/dashboard.png" alt="Fatortak dashboard with revenue, expenses, bank balance and profit chart" width="49%" />
-  <img src="marketing/landing/assets/screenshots/ai-chat.png" alt="Fatortak AI chat answering a question about October revenue with KPI cards" width="49%" />
+  <img src="https://raw.githubusercontent.com/Fatortak/Fatortak_Marketing/main/landing/assets/screenshots/dashboard.png" alt="Fatortak dashboard with revenue, expenses, bank balance and profit chart" width="49%" />
+  <img src="https://raw.githubusercontent.com/Fatortak/Fatortak_Marketing/main/landing/assets/screenshots/ai-chat.png" alt="Fatortak AI chat answering a question about October revenue with KPI cards" width="49%" />
 </p>
 <p align="center">
   <sub><strong>Dashboard</strong> — revenue, expenses, cash and receivables in one view.</sub>
@@ -56,8 +57,8 @@ Fatortak is a real application, not a landing-page mockup. The screens below are
 </p>
 
 <p align="center">
-  <img src="marketing/landing/assets/screenshots/ocr-invoice.png" alt="Fatortak OCR invoice page with an uploaded supplier invoice preview" width="49%" />
-  <img src="marketing/landing/assets/screenshots/income-statement.png" alt="Fatortak income statement with revenue, expenses and net income" width="49%" />
+  <img src="https://raw.githubusercontent.com/Fatortak/Fatortak_Marketing/main/landing/assets/screenshots/ocr-invoice.png" alt="Fatortak OCR invoice page with an uploaded supplier invoice preview" width="49%" />
+  <img src="https://raw.githubusercontent.com/Fatortak/Fatortak_Marketing/main/landing/assets/screenshots/income-statement.png" alt="Fatortak income statement with revenue, expenses and net income" width="49%" />
 </p>
 <p align="center">
   <sub><strong>OCR invoice</strong> — upload, preview and review before creating the invoice.</sub>

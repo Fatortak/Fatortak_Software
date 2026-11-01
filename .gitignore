@@ -64,12 +64,3 @@ Thumbs.db
 .vscode/
 *.swp
 *~
-
-# ---------------------------------------------------------------------------
-# Marketing automation local state
-# ---------------------------------------------------------------------------
-marketing/automation/.env
-marketing/automation/node_modules/
-marketing/automation/.state/
-marketing/landing/.vercel/
-marketing/landing/.netlify/

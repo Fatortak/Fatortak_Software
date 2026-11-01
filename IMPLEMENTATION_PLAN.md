@@ -260,7 +260,6 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
 | Self-hosted | Backup/upgrade automation (status reporting is implemented) |
 | UI | Full design-token pass and professional review of older pages; accessibility audit; Storybook/visual regression; code splitting; mobile QA |
 | Quality | Load test; broader frontend coverage for critical flows |
-| Marketing | Uncommitted `marketing/` changes are intentionally excluded until reviewed and scanned separately |
 
 ### Deferred with rationale
 
