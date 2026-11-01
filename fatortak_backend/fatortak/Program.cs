@@ -38,6 +38,7 @@ using fatortak.Services.BankReconciliationService;
 using fatortak.Services.ApprovalService;
 using fatortak.Services.CommissionService;
 using fatortak.Services.InventoryService;
+using fatortak.Services.TaxService;
 using fatortak.Services.PricingService;
 using fatortak.Services.PurchaseRequisitionService;
 using fatortak.Services.Procurement;
@@ -202,6 +203,7 @@ builder.Services.AddScoped<IBankReconciliationService, BankReconciliationService
 builder.Services.AddScoped<IPricingService, PricingService>();
 builder.Services.AddScoped<ICommissionService, CommissionService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<ITaxService, TaxService>();
             builder.Services.AddSingleton<IPublicInvoiceTokenService, PublicInvoiceTokenService>();
             builder.Services.AddSingleton<IDeploymentMode, DeploymentMode>();
             builder.Services.AddScoped<IItemService, ItemService>();

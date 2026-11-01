@@ -198,6 +198,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
       path: "/inventory",
     },
     {
+      name: isRTL ? "الإقرار الضريبي" : "VAT Return",
+      icon: Calculator,
+      path: "/tax-reports",
+    },
+    {
       name: isRTL ? "عروض الأسعار" : "Quotations",
       icon: ClipboardList,
       path: "/quotations",

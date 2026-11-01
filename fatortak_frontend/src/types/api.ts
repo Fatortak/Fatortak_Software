@@ -1716,3 +1716,49 @@ export interface InventoryValuationSummaryDto {
   lowStockCount: number;
   items: InventoryValuationDto[];
 }
+
+// Tax and e-invoice DTOs
+export interface VatReturnLineDto {
+  date: string;
+  documentType: string;
+  number: string;
+  partyName?: string;
+  taxableAmount: number;
+  vatAmount: number;
+  total: number;
+}
+
+export interface VatReturnDto {
+  fromDate: string;
+  toDate: string;
+  salesTaxable: number;
+  outputVat: number;
+  purchaseTaxable: number;
+  inputVat: number;
+  netVat: number;
+  lines: VatReturnLineDto[];
+}
+
+export interface EInvoiceExportDto {
+  fromDate: string;
+  toDate: string;
+  format: string;
+  invoices: Array<{
+    id: string;
+    invoiceNumber: string;
+    issueDate: string;
+    customerName?: string;
+    customerTaxNumber?: string;
+    currency?: string;
+    subtotal: number;
+    vatAmount: number;
+    total: number;
+    lines: Array<{
+      description: string;
+      quantity: number;
+      unitPrice: number;
+      vatRate: number;
+      lineTotal: number;
+    }>;
+  }>;
+}
