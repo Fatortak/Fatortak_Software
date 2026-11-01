@@ -1668,3 +1668,51 @@ export interface CommissionFilterDto {
   status?: string;
   userId?: string;
 }
+
+// Inventory valuation and stock adjustment DTOs
+export interface StockAdjustmentDto {
+  id: string;
+  itemId: string;
+  itemName: string;
+  date: string;
+  quantityChange: number;
+  unitCost?: number;
+  reason: string;
+  notes?: string;
+  userName?: string;
+  createdAt: string;
+}
+
+export interface StockAdjustmentCreateDto {
+  itemId: string;
+  date: string;
+  quantityChange: number;
+  unitCost?: number;
+  reason: string;
+  notes?: string;
+}
+
+export interface StockAdjustmentFilterDto {
+  search?: string;
+  itemId?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
+export interface InventoryValuationDto {
+  itemId: string;
+  itemName: string;
+  code?: string;
+  quantity: number;
+  unitCost: number;
+  value: number;
+  lowStock: boolean;
+}
+
+export interface InventoryValuationSummaryDto {
+  itemCount: number;
+  totalQuantity: number;
+  totalValue: number;
+  lowStockCount: number;
+  items: InventoryValuationDto[];
+}

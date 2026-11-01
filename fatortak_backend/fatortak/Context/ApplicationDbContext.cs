@@ -51,6 +51,7 @@ namespace fatortak.Context
         public DbSet<CustomerPriceList> CustomerPriceLists { get; set; }
         public DbSet<CommissionRule> CommissionRules { get; set; }
         public DbSet<SalesCommission> SalesCommissions { get; set; }
+        public DbSet<StockAdjustment> StockAdjustments { get; set; }
         public DbSet<Expenses> Expenses { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<Notification> Notifications { get; set; }

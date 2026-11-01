@@ -193,6 +193,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
       path: "/commissions",
     },
     {
+      name: isRTL ? "تقييم المخزون" : "Inventory Valuation",
+      icon: Warehouse,
+      path: "/inventory",
+    },
+    {
       name: isRTL ? "عروض الأسعار" : "Quotations",
       icon: ClipboardList,
       path: "/quotations",

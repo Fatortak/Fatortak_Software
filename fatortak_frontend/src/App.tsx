@@ -19,6 +19,7 @@ import ActivityLog from "./pages/ActivityLog";
 import BankReconciliation from "./pages/BankReconciliation";
 import PriceLists from "./pages/PriceLists";
 import Commissions from "./pages/Commissions";
+import Inventory from "./pages/Inventory";
 import SalesOrders from "./pages/SalesOrders";
 import PurchaseRequisitions from "./pages/PurchaseRequisitions";
 import RequestForQuotations from "./pages/RequestForQuotations";
@@ -158,6 +159,7 @@ function AppContent() {
           <Route path="bank-reconciliation" element={<BankReconciliation />} />
           <Route path="price-lists" element={<PriceLists />} />
           <Route path="commissions" element={<Commissions />} />
+          <Route path="inventory" element={<Inventory />} />
           <Route path="quotations" element={<Quotations />} />
           <Route path="sales-orders" element={<SalesOrders />} />
           <Route path="purchase-requisitions" element={<PurchaseRequisitions />} />
