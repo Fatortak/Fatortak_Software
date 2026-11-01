@@ -61,6 +61,7 @@ const documentTypes = [
   "Expense",
   "CreditNote",
   "Payment",
+  "Discount",
 ];
 
 const statusTone = (status: string) => {

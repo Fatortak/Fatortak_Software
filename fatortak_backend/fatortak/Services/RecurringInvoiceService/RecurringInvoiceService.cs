@@ -250,10 +250,10 @@ namespace fatortak.Services.RecurringInvoiceService
                        runs < 12)
                 {
                     await GenerateInvoiceAsync(schedule, tenantId);
+                    await _context.SaveChangesAsync();
                     generated++;
                     runs++;
                 }
-                await _context.SaveChangesAsync();
             }
             return generated;
         }

@@ -24,7 +24,7 @@ namespace fatortak.Services.ApprovalService
     {
         public static readonly string[] DocumentTypes =
         {
-            "Invoice", "Quotation", "PurchaseOrder", "Expense", "CreditNote", "Payment"
+            "Invoice", "Quotation", "PurchaseOrder", "Expense", "CreditNote", "Payment", "Discount"
         };
 
         private readonly ApplicationDbContext _context;
@@ -148,7 +148,7 @@ namespace fatortak.Services.ApprovalService
             var policy = await _context.ApprovalPolicies
                 .FirstOrDefaultAsync(p => p.TenantId == TenantId && p.DocumentType == type);
             var autoApprove = policy != null &&
-                (!policy.IsEnabled || (policy.ThresholdAmount > 0 && candidate.Amount < policy.ThresholdAmount));
+                (!policy.IsEnabled || (policy.ThresholdAmount > 0 && Math.Abs(candidate.Amount) < policy.ThresholdAmount));
 
             var request = new ApprovalRequest
             {
@@ -369,6 +369,23 @@ namespace fatortak.Services.ApprovalService
                             PartyName = t.PaymentMethod,
                             Amount = t.Amount,
                             Date = t.TransactionDate
+                        }).ToListAsync();
+
+                case "Discount":
+                    return await _context.Invoices
+                        .Where(i => i.TenantId == TenantId &&
+                                    i.DocumentType == "Invoice" &&
+                                    i.TotalDiscount > 0)
+                        .OrderByDescending(i => i.CreatedAt)
+                        .Take(take)
+                        .Select(i => new ApprovalCandidateDto
+                        {
+                            DocumentType = type,
+                            DocumentId = i.Id.ToString(),
+                            DocumentNumber = $"DSC-{i.InvoiceNumber}",
+                            PartyName = i.Customer.Name,
+                            Amount = i.TotalDiscount,
+                            Date = i.IssueDate
                         }).ToListAsync();
 
                 default:
