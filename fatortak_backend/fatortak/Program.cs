@@ -27,6 +27,7 @@ using fatortak.Services.HR.DepartmentService;
 using fatortak.Services.HR.EmployeeService;
 using fatortak.Services.HR.WorkSettingService;
 using fatortak.Services.InvoiceService;
+using fatortak.Services.InvoiceNoteService;
 using fatortak.Services.ItemService;
 using fatortak.Services.NotificationService;
 using fatortak.Services.ProjectService;
@@ -181,6 +182,7 @@ namespace fatortak
             builder.Services.AddScoped<IUserProfileService, UserProfileService>();
             builder.Services.AddScoped<ICustomerService, CustomerService>();
             builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+            builder.Services.AddScoped<IInvoiceNoteService, InvoiceNoteService>();
 builder.Services.AddScoped<IQuotationService, QuotationService>();
 builder.Services.AddScoped<IPurchaseRequisitionService, PurchaseRequisitionService>();
 builder.Services.AddScoped<IRfqService, RfqService>();

@@ -155,6 +155,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
       path: "/sell-invoices",
     },
     {
+      name: isRTL ? "الإشعارات الدائنة والمدينة" : "Credit & Debit Notes",
+      icon: FileText,
+      path: "/credit-notes",
+    },
+    {
       name: isRTL ? "عروض الأسعار" : "Quotations",
       icon: ClipboardList,
       path: "/quotations",

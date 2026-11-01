@@ -1116,7 +1116,9 @@ export interface PurchaseOrderItemDto {
   lineTotal: number;
   receivedQuantity: number;
   rejectedQuantity: number;
+  billedQuantity: number;
   remainingQuantity: number;
+  remainingToBill: number;
 }
 
 export interface PurchaseOrderDto {
@@ -1223,6 +1225,121 @@ export interface GoodsReceiptFilterDto {
   search?: string;
   status?: string;
   purchaseOrderId?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
+// Supplier bill matching DTOs
+export interface SupplierBillItemCreateDto {
+  purchaseOrderItemId: string;
+  quantity: number;
+  unitPrice: number;
+  vatRate?: number;
+  discount: number;
+}
+
+export interface SupplierBillCreateDto {
+  supplierInvoiceNumber: string;
+  issueDate: string;
+  dueDate: string;
+  notes?: string;
+  goodsReceiptNoteId?: string;
+  items: SupplierBillItemCreateDto[];
+}
+
+export interface SupplierBillLineDto {
+  purchaseOrderItemId: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  purchaseOrderUnitPrice: number;
+  vatRate?: number;
+  lineTotal: number;
+  priceVariance: number;
+  amountVariance: number;
+}
+
+export interface SupplierBillDto {
+  invoiceId: string;
+  invoiceNumber: string;
+  supplierInvoiceNumber?: string;
+  status: string;
+  issueDate: string;
+  dueDate: string;
+  createdAt: string;
+  subtotal: number;
+  vatAmount: number;
+  total: number;
+  goodsReceiptNoteId?: string;
+  hasVariance: boolean;
+  lines: SupplierBillLineDto[];
+}
+
+export interface SupplierBillMatchingDto {
+  purchaseOrderId: string;
+  poNumber: string;
+  receivedValue: number;
+  billedValue: number;
+  hasVariance: boolean;
+  bills: SupplierBillDto[];
+}
+
+// Credit / debit note DTOs
+export interface InvoiceNoteItemCreateDto {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  vatRate?: number;
+  discount: number;
+}
+
+export interface InvoiceNoteCreateDto {
+  originalInvoiceId: string;
+  noteType: "Credit" | "Debit";
+  issueDate: string;
+  reason: string;
+  notes?: string;
+  items: InvoiceNoteItemCreateDto[];
+}
+
+export interface InvoiceNoteUpdateDto extends InvoiceNoteCreateDto {}
+
+export interface InvoiceNoteItemDto {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  vatRate?: number;
+  discount: number;
+  lineTotal: number;
+}
+
+export interface InvoiceNoteDto {
+  id: string;
+  noteNumber: string;
+  noteType: "Credit" | "Debit";
+  invoiceType: string;
+  originalInvoiceId: string;
+  originalInvoiceNumber?: string;
+  partyName?: string;
+  issueDate: string;
+  reason: string;
+  notes?: string;
+  status: string;
+  subtotal: number;
+  vatAmount: number;
+  totalDiscount: number;
+  total: number;
+  createdAt: string;
+  postedAt?: string;
+  items: InvoiceNoteItemDto[];
+}
+
+export interface InvoiceNoteFilterDto {
+  search?: string;
+  status?: string;
+  noteType?: string;
+  invoiceType?: string;
   fromDate?: string;
   toDate?: string;
 }

@@ -24,6 +24,13 @@ namespace fatortak.Dtos.Invoice
         public string? Notes { get; set; }
         public string? Terms { get; set; }
         public string? InvoiceType { get; set; } = InvoiceTypes.Sell.ToString();
+        public string? DocumentType { get; set; } = "Invoice";
+        public Guid? OriginalInvoiceId { get; set; }
+        public string? NoteReason { get; set; }
+        public decimal AdjustedAmount { get; set; }
+        public Guid? PurchaseOrderId { get; set; }
+        public Guid? GoodsReceiptNoteId { get; set; }
+        public string? SupplierInvoiceNumber { get; set; }
         public CompanyDto? Company { get; set; }
         public List<InvoiceItemDto> Items { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -37,6 +44,6 @@ namespace fatortak.Dtos.Invoice
         public string? AttachmentUrl { get; set; }
         /// <summary>Signed, expiring token for the public invoice link.</summary>
         public string? PublicToken { get; set; }
-        public decimal RemainingAmount => Total - (AmountPaid ?? 0);
+        public decimal RemainingAmount => Total - (AmountPaid ?? 0) - AdjustedAmount;
     }
 }

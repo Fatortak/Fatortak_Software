@@ -149,7 +149,7 @@ namespace fatortak.Services.InvoiceService
 
                 var lastInvoiceDtoBaseType = dto.InvoiceType ?? InvoiceTypes.Sell.ToString();
                 var lastInvoice = await _context.Invoices
-                    .Where(i => i.TenantId == TenantId && i.InvoiceType.ToLower() == lastInvoiceDtoBaseType.ToLower())
+                    .Where(i => i.TenantId == TenantId && i.DocumentType == "Invoice")
                     .OrderByDescending(i => i.CreatedAt)
                     .FirstOrDefaultAsync();
 
@@ -316,7 +316,7 @@ namespace fatortak.Services.InvoiceService
 
                 var lastInvoiceDtoBaseType = dto.InvoiceType ?? InvoiceTypes.Sell.ToString();
                 var lastInvoice = await _context.Invoices
-                    .Where(i => i.TenantId == TenantId && i.InvoiceType.ToLower() == lastInvoiceDtoBaseType.ToLower())
+                    .Where(i => i.TenantId == TenantId && i.DocumentType == "Invoice")
                     .OrderByDescending(i => i.CreatedAt)
                     .FirstOrDefaultAsync();
 
@@ -325,7 +325,6 @@ namespace fatortak.Services.InvoiceService
                 {
                     isManualUnique = !await _context.Invoices.AnyAsync(i => 
                         i.TenantId == TenantId && 
-                        i.InvoiceType.ToLower() == lastInvoiceDtoBaseType.ToLower() && 
                         i.InvoiceNumber == dto.InvoiceNumber);
                 }
 
@@ -524,6 +523,10 @@ namespace fatortak.Services.InvoiceService
         // Helper methods
         private async Task UpdateInventoryForInvoiceAsync(Invoice invoice, string invoiceType)
         {
+            // Goods receipts linked to a purchase order already moved stock on posting.
+            if (invoice.PurchaseOrderId.HasValue)
+                return;
+
             foreach (var invoiceItem in invoice.InvoiceItems)
             {
                 if (invoiceItem.Item != null && invoiceItem.Item.Type == "product" && !invoiceItem.Item.IsDeleted)
@@ -733,6 +736,12 @@ namespace fatortak.Services.InvoiceService
             // Invoice type filter
             if (!string.IsNullOrWhiteSpace(filter.InvoiceType))
                 query = query.Where(i => i.InvoiceType.ToLower() == filter.InvoiceType.ToLower());
+
+            if (!string.IsNullOrWhiteSpace(filter.DocumentType))
+                query = query.Where(i => i.DocumentType == filter.DocumentType);
+            else
+                query = query.Where(i => i.DocumentType == "Invoice" ||
+                                         string.IsNullOrEmpty(i.DocumentType));
 
             // Date range filters
             if (filter.FromDate.HasValue)
@@ -1735,6 +1744,13 @@ namespace fatortak.Services.InvoiceService
                 Total = invoice.Total,
                 Currency = invoice.Currency,
                 InvoiceType = invoice.InvoiceType,
+                DocumentType = invoice.DocumentType,
+                OriginalInvoiceId = invoice.OriginalInvoiceId,
+                NoteReason = invoice.NoteReason,
+                AdjustedAmount = invoice.AdjustedAmount,
+                PurchaseOrderId = invoice.PurchaseOrderId,
+                GoodsReceiptNoteId = invoice.GoodsReceiptNoteId,
+                SupplierInvoiceNumber = invoice.SupplierInvoiceNumber,
                 Notes = invoice.Notes,
                 Terms = invoice.Terms,
                 AmountPaid = invoice.AmountPaid,

@@ -6,6 +6,7 @@ import {
   PurchaseOrderCreateDto,
   PurchaseOrderFilterDto,
   PurchaseOrderUpdateDto,
+  SupplierBillCreateDto,
 } from "../types/api";
 
 export const usePurchaseOrders = (
@@ -63,5 +64,25 @@ export const useUpdatePurchaseOrderStatus = () => {
     mutationFn: ({ id, status }: { id: string; status: string }) =>
       unwrapServiceResult(purchaseOrderService.updateStatus(id, status)),
     onSuccess: () => invalidate(client),
+  });
+};
+
+export const useSupplierBillMatching = (id?: string) =>
+  useQuery({
+    queryKey: ["purchase-order-bills", id],
+    queryFn: () => purchaseOrderService.getSupplierBills(id!),
+    enabled: !!id,
+  });
+
+export const useCreateSupplierBill = () => {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: SupplierBillCreateDto }) =>
+      unwrapServiceResult(purchaseOrderService.createSupplierBill(id, data)),
+    onSuccess: () => {
+      invalidate(client);
+      client.invalidateQueries({ queryKey: ["purchase-order-bills"] });
+      client.invalidateQueries({ queryKey: ["invoices"] });
+    },
   });
 };

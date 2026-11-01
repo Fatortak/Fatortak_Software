@@ -19,24 +19,25 @@ namespace fatortak.Seeding
                 var company = await context.Companies.FirstOrDefaultAsync(c => c.TenantId == tenant.Id);
                 string prefix = company?.InvoicePrefix ?? "INV-";
 
-                // Retrieve all invoices for this tenant, ordered by creation date
+                var legacyInvoices = await context.Invoices
+                    .Where(i => i.TenantId == tenant.Id &&
+                                (i.DocumentType == null || i.DocumentType == ""))
+                    .ToListAsync();
+                foreach (var invoice in legacyInvoices)
+                    invoice.DocumentType = "Invoice";
+
+                // Retrieve all regular invoices for this tenant, ordered by creation date.
+                // Credit/debit notes keep their own CRN-/DBN- sequences.
                 var invoices = await context.Invoices
-                    .Where(i => i.TenantId == tenant.Id)
+                    .Where(i => i.TenantId == tenant.Id && i.DocumentType == "Invoice")
                     .OrderBy(i => i.CreatedAt)
                     .ToListAsync();
 
-                // Group by normalized InvoiceType (e.g., selling vs buying)
-                var groupedByType = invoices.GroupBy(i => i.InvoiceType?.ToLower() ?? InvoiceTypes.Sell.ToString().ToLower());
-
-                foreach (var group in groupedByType)
+                long counter = 1;
+                foreach (var invoice in invoices)
                 {
-                    long counter = 1;
-                    foreach (var invoice in group)
-                    {
-                        // Generate the correct sequence number like INV-0001
-                        invoice.InvoiceNumber = $"{prefix}{counter.ToString().PadLeft(4, '0')}";
-                        counter++;
-                    }
+                    invoice.InvoiceNumber = $"{prefix}{counter.ToString().PadLeft(4, '0')}";
+                    counter++;
                 }
             }
 

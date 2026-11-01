@@ -1061,6 +1061,9 @@ namespace fatortak.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal>("AdjustedAmount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal?>("AmountPaid")
                         .HasColumnType("decimal(18,2)");
 
@@ -1085,11 +1088,18 @@ namespace fatortak.Migrations
                     b.Property<Guid?>("CustomerId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal?>("DownPayment")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("GoodsReceiptNoteId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()
@@ -1102,13 +1112,25 @@ namespace fatortak.Migrations
                     b.Property<DateTime>("IssueDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("NoteReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("OriginalInvoiceId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("PostedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid?>("ProjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PurchaseOrderId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("RemindersCreated")
@@ -1123,6 +1145,9 @@ namespace fatortak.Migrations
 
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("SupplierInvoiceNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uniqueidentifier");
@@ -1183,6 +1208,9 @@ namespace fatortak.Migrations
 
                     b.Property<decimal?>("LineTotal")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("PurchaseOrderItemId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("Quantity")
                         .HasColumnType("int");
@@ -1765,6 +1793,9 @@ namespace fatortak.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("BilledQuantity")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .IsRequired()

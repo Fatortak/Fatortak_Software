@@ -41,8 +41,7 @@ namespace fatortak.Services.AccountingPostingService
         }
 
         public async Task<bool> PostInvoiceAsync(Guid invoiceId)
-        {
-            var existingTransaction = _context.Database.CurrentTransaction;
+        {            var existingTransaction = _context.Database.CurrentTransaction;
             var transaction = existingTransaction == null ? await _context.Database.BeginTransactionAsync() : null;
 
             try
@@ -286,6 +285,153 @@ namespace fatortak.Services.AccountingPostingService
             finally
             {
                 if (transaction != null) await transaction.DisposeAsync();
+            }
+        }
+
+        public async Task<bool> PostInvoiceAdjustmentAsync(Guid adjustmentInvoiceId)
+        {
+            var existingTransaction = _context.Database.CurrentTransaction;
+            var transaction = existingTransaction == null ? await _context.Database.BeginTransactionAsync() : null;
+
+            try
+            {
+                var note = await _context.Invoices
+                    .Include(i => i.Customer)
+                    .FirstOrDefaultAsync(i => i.Id == adjustmentInvoiceId && i.TenantId == TenantId);
+
+                if (note == null || note.DocumentType is not ("CreditNote" or "DebitNote"))
+                {
+                    _logger.LogError("Credit/debit note {NoteId} not found", adjustmentInvoiceId);
+                    return false;
+                }
+
+                var isCredit = note.DocumentType == "CreditNote";
+                var isSales = note.InvoiceType.Equals(InvoiceTypes.Sell.ToString(), StringComparison.OrdinalIgnoreCase);
+                var journalEntry = await _context.JournalEntries
+                    .Include(je => je.Lines)
+                    .FirstOrDefaultAsync(je => je.TenantId == TenantId &&
+                                               je.ReferenceType == JournalEntryReferenceType.Reversing &&
+                                               je.ReferenceId == note.Id);
+
+                if (journalEntry != null)
+                {
+                    _context.JournalEntryLines.RemoveRange(journalEntry.Lines);
+                    journalEntry.Date = note.IssueDate.Date;
+                    journalEntry.Description = $"{note.DocumentType} {note.InvoiceNumber} - {note.Customer?.Name ?? "Party"} (Updated)";
+                    journalEntry.UpdatedAt = DateTime.UtcNow;
+                    journalEntry.UpdatedBy = CurrentUserId;
+                }
+                else
+                {
+                    journalEntry = new JournalEntry
+                    {
+                        Id = Guid.NewGuid(),
+                        TenantId = TenantId,
+                        EntryNumber = await GenerateEntryNumberAsync(),
+                        Date = note.IssueDate.Date,
+                        ReferenceType = JournalEntryReferenceType.Reversing,
+                        ReferenceId = note.Id,
+                        ProjectId = note.ProjectId,
+                        Description = $"{note.DocumentType} {note.InvoiceNumber} - {note.Customer?.Name ?? "Party"}",
+                        IsPosted = true,
+                        PostedAt = DateTime.UtcNow,
+                        PostedBy = CurrentUserId,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedBy = CurrentUserId
+                    };
+                    _context.JournalEntries.Add(journalEntry);
+                }
+
+                var partyAccount = note.Customer?.AccountId != null
+                    ? await _context.Accounts.FirstOrDefaultAsync(a =>
+                        a.Id == note.Customer.AccountId && a.TenantId == TenantId)
+                    : null;
+                var receivable = isSales
+                    ? partyAccount ?? await GetOrCreateSystemAccountAsync("1200", "Accounts Receivable", AccountType.Asset)
+                    : null;
+                var payable = !isSales
+                    ? partyAccount ?? await GetOrCreateSystemAccountAsync("2100", "Accounts Payable", AccountType.Liability)
+                    : null;
+                var revenue = isSales
+                    ? await GetOrCreateSystemAccountAsync("4000", "Sales Revenue", AccountType.Revenue)
+                    : null;
+                var expense = !isSales
+                    ? await GetOrCreateSystemAccountAsync("5000", "General Expenses", AccountType.Expense)
+                    : null;
+                var vatPayable = isSales
+                    ? await GetOrCreateSystemAccountAsync("2200", "VAT Payable", AccountType.Liability)
+                    : null;
+                var vatInput = !isSales
+                    ? await GetOrCreateSystemAccountAsync("1300", "VAT Input", AccountType.Asset)
+                    : null;
+
+                if ((isSales && (receivable == null || revenue == null)) ||
+                    (!isSales && (payable == null || expense == null)))
+                {
+                    _logger.LogError("Required accounts are missing for note {NoteId}", note.Id);
+                    if (transaction != null) await transaction.RollbackAsync();
+                    return false;
+                }
+
+                var net = Math.Abs(note.Total - note.VatAmount);
+                var vat = Math.Abs(note.VatAmount);
+                var total = Math.Abs(note.Total);
+                var label = $"{note.DocumentType} {note.InvoiceNumber}";
+
+                void AddLine(Account? account, decimal debit, decimal credit, string description)
+                {
+                    if (account == null || (debit == 0 && credit == 0)) return;
+                    _context.JournalEntryLines.Add(new JournalEntryLine
+                    {
+                        Id = Guid.NewGuid(),
+                        JournalEntryId = journalEntry.Id,
+                        AccountId = account.Id,
+                        Debit = debit,
+                        Credit = credit,
+                        Description = description
+                    });
+                }
+
+                if (isSales)
+                {
+                    if (isCredit)
+                    {
+                        AddLine(revenue, net, 0, $"{label} - revenue reversal");
+                        AddLine(vatPayable, vat, 0, $"{label} - VAT reversal");
+                        AddLine(receivable, 0, total, $"{label} - receivable credit");
+                    }
+                    else
+                    {
+                        AddLine(receivable, total, 0, $"{label} - receivable");
+                        AddLine(revenue, 0, net, $"{label} - revenue");
+                        AddLine(vatPayable, 0, vat, $"{label} - VAT");
+                    }
+                }
+                else
+                {
+                    if (isCredit)
+                    {
+                        AddLine(payable, total, 0, $"{label} - payable reduction");
+                        AddLine(expense, 0, net, $"{label} - expense reversal");
+                        AddLine(vatInput, 0, vat, $"{label} - VAT reversal");
+                    }
+                    else
+                    {
+                        AddLine(expense, net, 0, $"{label} - expense");
+                        AddLine(vatInput, vat, 0, $"{label} - VAT");
+                        AddLine(payable, 0, total, $"{label} - payable");
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                if (transaction != null) await transaction.CommitAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                if (transaction != null) await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error posting credit/debit note {NoteId}", adjustmentInvoiceId);
+                return false;
             }
         }
 

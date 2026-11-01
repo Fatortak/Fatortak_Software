@@ -11,6 +11,7 @@ namespace fatortak.Services.AccountingPostingService
         /// For credit sales: Dr Accounts Receivable, Cr Sales Revenue, Cr VAT Payable
         /// </summary>
         Task<bool> PostInvoiceAsync(Guid invoiceId);
+        Task<bool> PostInvoiceAdjustmentAsync(Guid adjustmentInvoiceId);
 
         /// <summary>
         /// Posts an expense to accounting journal entries.

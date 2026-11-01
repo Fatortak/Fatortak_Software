@@ -28,6 +28,8 @@ Shipped in the current rollout:
 - Request for quotations: supplier invitations, per-line quotes, comparison and award to purchase order.
 - Purchase orders: ordering, expected delivery, receiving progress, close and cancel.
 - Goods receipts: partial/final receipts, rejected quantities, stock and weighted-cost posting.
+- Supplier bill matching: bills from posted receipts, purchase-order linkage and price-variance flags.
+- Credit/debit notes: linked invoice, line-level tax, posting reversal and adjusted balances.
 - Delivery notes: generated from confirmed sales orders, listed separately with details and print.
 
 Still to do:
@@ -35,8 +37,8 @@ Still to do:
 - Public invoice and print templates: final production logo/large-list spot check and cross-browser PDF check.
 - A full accessibility audit: screen-reader certification and automated axe checks.
 - Storybook/visual regression for the shared primitives.
-- The remaining commercial document chain: supplier bill matching, credit/debit notes, recurring invoices and full approvals.
-- RFQs, purchase orders, goods receipts, quotations, sales orders, purchase requisitions and delivery notes are implemented end to end.
+- The remaining commercial document chain: recurring invoices and full approvals.
+- RFQs, purchase orders, goods receipts, supplier bill matching, credit/debit notes, quotations, sales orders, purchase requisitions and delivery notes are implemented end to end.
 
 ---
 

@@ -12,5 +12,6 @@
         public Decimal? maximumPrice { get; set; }
         public Guid? BranchId { get; set; }
         public Guid? ProjectId { get; set; }
+        public string? DocumentType { get; set; }
     }
 }

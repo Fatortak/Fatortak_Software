@@ -49,6 +49,7 @@ namespace fatortak.Entities
         public decimal LineTotal { get; set; }
         public int ReceivedQuantity { get; set; }
         public int RejectedQuantity { get; set; }
+        public int BilledQuantity { get; set; }
 
         public Tenant Tenant { get; set; } = null!;
         public PurchaseOrder PurchaseOrder { get; set; } = null!;

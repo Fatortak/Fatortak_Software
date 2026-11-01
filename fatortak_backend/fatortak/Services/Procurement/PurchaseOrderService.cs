@@ -15,6 +15,8 @@ namespace fatortak.Services.Procurement
         Task<ServiceResult<PurchaseOrderDto>> UpdateAsync(Guid id, PurchaseOrderUpdateDto dto);
         Task<ServiceResult<bool>> DeleteAsync(Guid id);
         Task<ServiceResult<PurchaseOrderDto>> UpdateStatusAsync(Guid id, string status);
+        Task<ServiceResult<SupplierBillMatchingDto>> GetSupplierBillsAsync(Guid id);
+        Task<ServiceResult<SupplierBillDto>> CreateSupplierBillAsync(Guid id, SupplierBillCreateDto dto);
     }
 
     public class PurchaseOrderService : IPurchaseOrderService
@@ -224,12 +226,219 @@ namespace fatortak.Services.Procurement
             return await GetAsync(id);
         }
 
+        public async Task<ServiceResult<SupplierBillMatchingDto>> GetSupplierBillsAsync(Guid id)
+        {
+            var order = await BaseQuery().FirstOrDefaultAsync(o => o.Id == id && o.TenantId == TenantId);
+            if (order == null)
+                return ServiceResult<SupplierBillMatchingDto>.Failure("Purchase order not found");
+
+            var invoices = await _context.Invoices
+                .Include(i => i.InvoiceItems)
+                .Where(i => i.TenantId == TenantId && i.PurchaseOrderId == id)
+                .OrderByDescending(i => i.CreatedAt)
+                .ToListAsync();
+
+            var postedReceipts = await _context.GoodsReceiptItems
+                .Where(i => i.GoodsReceiptNote.PurchaseOrderId == id &&
+                            i.GoodsReceiptNote.TenantId == TenantId &&
+                            i.GoodsReceiptNote.Status == "Posted")
+                .ToListAsync();
+
+            var poPrices = order.Items.ToDictionary(i => i.Id, i => i.UnitPrice);
+            var bills = invoices.Select(invoice => MapSupplierBill(invoice, poPrices)).ToList();
+
+            return ServiceResult<SupplierBillMatchingDto>.SuccessResult(new SupplierBillMatchingDto
+            {
+                PurchaseOrderId = order.Id,
+                PoNumber = order.PoNumber,
+                ReceivedValue = postedReceipts.Sum(i => i.LineTotal),
+                BilledValue = invoices.Sum(i => i.Subtotal),
+                HasVariance = bills.Any(b => b.HasVariance),
+                Bills = bills
+            });
+        }
+
+        public async Task<ServiceResult<SupplierBillDto>> CreateSupplierBillAsync(
+            Guid id, SupplierBillCreateDto dto)
+        {
+            var order = await _context.PurchaseOrders
+                .Include(o => o.Items)
+                .Include(o => o.Supplier)
+                .FirstOrDefaultAsync(o => o.Id == id && o.TenantId == TenantId);
+            if (order == null)
+                return ServiceResult<SupplierBillDto>.Failure("Purchase order not found");
+            if (order.Status is not ("PartiallyReceived" or "Received"))
+                return ServiceResult<SupplierBillDto>.Failure("Receive goods before creating a supplier bill.");
+            if (string.IsNullOrWhiteSpace(dto.SupplierInvoiceNumber))
+                return ServiceResult<SupplierBillDto>.Failure("Supplier invoice number is required.");
+
+            var supplierInvoiceNumber = dto.SupplierInvoiceNumber.Trim();
+            var duplicate = await _context.Invoices.AnyAsync(i =>
+                i.TenantId == TenantId &&
+                i.CustomerId == order.SupplierId &&
+                i.SupplierInvoiceNumber == supplierInvoiceNumber);
+            if (duplicate)
+                return ServiceResult<SupplierBillDto>.Failure(
+                    "This supplier invoice number is already recorded.");
+
+            var postedReceipts = await _context.GoodsReceiptItems
+                .Where(i => i.GoodsReceiptNote.PurchaseOrderId == id &&
+                            i.GoodsReceiptNote.TenantId == TenantId &&
+                            i.GoodsReceiptNote.Status == "Posted")
+                .ToListAsync();
+            if (postedReceipts.Count == 0)
+                return ServiceResult<SupplierBillDto>.Failure("No posted goods receipts found for this order.");
+
+            if (dto.GoodsReceiptNoteId.HasValue)
+            {
+                var receiptExists = await _context.GoodsReceiptNotes.AnyAsync(g =>
+                    g.Id == dto.GoodsReceiptNoteId &&
+                    g.PurchaseOrderId == id &&
+                    g.TenantId == TenantId &&
+                    g.Status == "Posted");
+                if (!receiptExists)
+                    return ServiceResult<SupplierBillDto>.Failure("The selected goods receipt could not be found.");
+            }
+
+            var receivedByItem = postedReceipts
+                .GroupBy(i => i.PurchaseOrderItemId)
+                .ToDictionary(g => g.Key, g => g.Sum(i => i.ReceivedQuantity));
+
+            var requested = dto.Items?.Where(i => i.Quantity > 0).ToList() ?? new List<SupplierBillItemCreateDto>();
+            if (requested.Count == 0)
+            {
+                requested = order.Items
+                    .Where(i => i.ReceivedQuantity - i.BilledQuantity > 0)
+                    .Select(i => new SupplierBillItemCreateDto
+                    {
+                        PurchaseOrderItemId = i.Id,
+                        Quantity = i.ReceivedQuantity - i.BilledQuantity,
+                        UnitPrice = i.UnitPrice,
+                        VatRate = i.VatRate,
+                        Discount = i.Discount
+                    })
+                    .ToList();
+            }
+
+            if (requested.Count == 0)
+                return ServiceResult<SupplierBillDto>.Failure("There are no received quantities left to bill.");
+            if (requested.Select(i => i.PurchaseOrderItemId).Distinct().Count() != requested.Count)
+                return ServiceResult<SupplierBillDto>.Failure("Each purchase order line can appear only once.");
+            if (requested.Any(i => i.UnitPrice < 0))
+                return ServiceResult<SupplierBillDto>.Failure("Bill prices cannot be negative.");
+            if (requested.Any(i => i.Discount is < 0 or > 1))
+                return ServiceResult<SupplierBillDto>.Failure("Discounts must be between 0 and 1.");
+
+            var company = await _context.Companies.FirstOrDefaultAsync(c => c.TenantId == TenantId);
+            var lastInvoice = await _context.Invoices
+                .Where(i => i.TenantId == TenantId)
+                .OrderByDescending(i => i.CreatedAt)
+                .Select(i => i.InvoiceNumber)
+                .FirstOrDefaultAsync();
+
+            var invoice = new Invoice
+            {
+                TenantId = TenantId,
+                InvoiceNumber = DocumentNumberHelper.Next(
+                    string.IsNullOrWhiteSpace(company?.InvoicePrefix) ? "BILL-" : company!.InvoicePrefix!,
+                    lastInvoice),
+                CustomerId = order.SupplierId,
+                UserId = TryGetUserId(),
+                IssueDate = dto.IssueDate,
+                DueDate = dto.DueDate,
+                Status = "Draft",
+                InvoiceType = "Buy",
+                Currency = order.Currency ?? company?.Currency,
+                Notes = dto.Notes,
+                PurchaseOrderId = order.Id,
+                GoodsReceiptNoteId = dto.GoodsReceiptNoteId,
+                SupplierInvoiceNumber = supplierInvoiceNumber
+            };
+
+            foreach (var line in requested)
+            {
+                var poItem = order.Items.FirstOrDefault(i => i.Id == line.PurchaseOrderItemId);
+                if (poItem == null)
+                    return ServiceResult<SupplierBillDto>.Failure("A bill line does not belong to this purchase order.");
+
+                var received = receivedByItem.GetValueOrDefault(poItem.Id, 0);
+                var billable = received - poItem.BilledQuantity;
+                if (line.Quantity > billable)
+                    return ServiceResult<SupplierBillDto>.Failure(
+                        $"Billing {poItem.Description} exceeds the received quantity not yet billed.");
+
+                var vatRate = line.VatRate ?? poItem.VatRate ?? company?.DefaultVatRate ?? 0;
+                var net = line.Quantity * line.UnitPrice * (1 - line.Discount);
+                invoice.InvoiceItems.Add(new InvoiceItem
+                {
+                    TenantId = TenantId,
+                    ItemId = poItem.ItemId,
+                    Description = poItem.Description,
+                    Quantity = line.Quantity,
+                    UnitPrice = line.UnitPrice,
+                    VatRate = vatRate,
+                    Discount = line.Discount,
+                    LineTotal = net + net * vatRate,
+                    PurchaseOrderItemId = poItem.Id
+                });
+                poItem.BilledQuantity += line.Quantity;
+            }
+
+            invoice.Subtotal = invoice.InvoiceItems.Sum(i => i.Quantity.GetValueOrDefault() * i.UnitPrice.GetValueOrDefault());
+            invoice.VatAmount = invoice.InvoiceItems.Sum(i =>
+                i.Quantity.GetValueOrDefault() * i.UnitPrice.GetValueOrDefault() *
+                (1 - i.Discount.GetValueOrDefault()) * i.VatRate.GetValueOrDefault());
+            invoice.TotalDiscount = invoice.InvoiceItems.Sum(i =>
+                i.Quantity.GetValueOrDefault() * i.UnitPrice.GetValueOrDefault() * i.Discount.GetValueOrDefault());
+            invoice.Total = invoice.Subtotal + invoice.VatAmount - invoice.TotalDiscount;
+
+            _context.Invoices.Add(invoice);
+            await _context.SaveChangesAsync();
+
+            var poPrices = order.Items.ToDictionary(i => i.Id, i => i.UnitPrice);
+            return ServiceResult<SupplierBillDto>.SuccessResult(MapSupplierBill(invoice, poPrices));
+        }
+
+        private static SupplierBillDto MapSupplierBill(
+            Invoice invoice, IReadOnlyDictionary<Guid, decimal> poPrices)
+        {
+            var lines = invoice.InvoiceItems.Select(i => new SupplierBillLineDto
+            {
+                PurchaseOrderItemId = i.PurchaseOrderItemId ?? Guid.Empty,
+                Description = i.Description,
+                Quantity = i.Quantity.GetValueOrDefault(),
+                UnitPrice = i.UnitPrice.GetValueOrDefault(),
+                PurchaseOrderUnitPrice = i.PurchaseOrderItemId.HasValue
+                    ? poPrices.GetValueOrDefault(i.PurchaseOrderItemId.Value)
+                    : 0,
+                VatRate = i.VatRate,
+                LineTotal = i.LineTotal.GetValueOrDefault()
+            }).ToList();
+
+            return new SupplierBillDto
+            {
+                InvoiceId = invoice.Id,
+                InvoiceNumber = invoice.InvoiceNumber,
+                SupplierInvoiceNumber = invoice.SupplierInvoiceNumber,
+                Status = invoice.Status,
+                IssueDate = invoice.IssueDate,
+                DueDate = invoice.DueDate,
+                CreatedAt = invoice.CreatedAt,
+                Subtotal = invoice.Subtotal,
+                VatAmount = invoice.VatAmount,
+                Total = invoice.Total,
+                GoodsReceiptNoteId = invoice.GoodsReceiptNoteId,
+                HasVariance = lines.Any(l => l.PriceVariance != 0),
+                Lines = lines
+            };
+        }
+
         private IQueryable<PurchaseOrder> BaseQuery() =>
             _context.PurchaseOrders
                 .Include(o => o.Supplier)
                 .Include(o => o.RequestForQuotation)
                 .Include(o => o.Items)
-                .Include(o => o.GoodsReceipts);
+                .Include(o => o.GoodsReceipts).ThenInclude(g => g.Items);
 
         private async Task<string?> ValidateAsync(PurchaseOrderCreateDto dto)
         {
@@ -325,7 +534,8 @@ namespace fatortak.Services.Procurement
                     Discount = i.Discount,
                     LineTotal = i.LineTotal,
                     ReceivedQuantity = i.ReceivedQuantity,
-                    RejectedQuantity = i.RejectedQuantity
+                    RejectedQuantity = i.RejectedQuantity,
+                    BilledQuantity = i.BilledQuantity
                 }).ToList()
             };
         }

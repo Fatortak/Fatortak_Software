@@ -64,6 +64,21 @@ namespace fatortak.Controllers
             var result = await _service.UpdateStatusAsync(id, dto.Status);
             return result.Success ? Ok(result) : BadRequest(result);
         }
+
+        [HttpGet("{id}/supplier-bills")]
+        public async Task<ActionResult<ServiceResult<SupplierBillMatchingDto>>> SupplierBills(Guid id)
+        {
+            var result = await _service.GetSupplierBillsAsync(id);
+            return result.Success ? Ok(result) : NotFound(result);
+        }
+
+        [HttpPost("{id}/supplier-bills")]
+        public async Task<ActionResult<ServiceResult<SupplierBillDto>>> CreateSupplierBill(
+            Guid id, [FromBody] SupplierBillCreateDto dto)
+        {
+            var result = await _service.CreateSupplierBillAsync(id, dto);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
     }
 
     public class UpdatePurchaseOrderStatusDto

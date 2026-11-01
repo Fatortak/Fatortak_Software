@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   CheckCircle2,
   Eye,
+  FileCheck2,
   PackageCheck,
   PackagePlus,
   Plus,
@@ -44,10 +45,12 @@ import { useRoleAccess } from "@/hooks/useRoleAccess";
 import {
   useDeletePurchaseOrder,
   usePurchaseOrders,
+  useSupplierBillMatching,
   useUpdatePurchaseOrderStatus,
 } from "@/hooks/usePurchaseOrders";
 import PurchaseOrderModal from "@/components/modals/PurchaseOrderModal";
 import GoodsReceiptModal from "@/components/modals/GoodsReceiptModal";
+import SupplierBillModal from "@/components/modals/SupplierBillModal";
 import { formatCurrency } from "@/Helpers/formatCurrency";
 import type { PurchaseOrderDto } from "@/types/api";
 
@@ -77,11 +80,14 @@ const PurchaseOrders: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [details, setDetails] = useState<PurchaseOrderDto | null>(null);
   const [receiving, setReceiving] = useState<PurchaseOrderDto | null>(null);
+  const [billing, setBilling] = useState<PurchaseOrderDto | null>(null);
 
   const { data: response, isLoading, refetch } = usePurchaseOrders(pagination, {
     search: search || undefined,
     status: status === "all" ? undefined : status,
   });
+  const { data: billResponse } = useSupplierBillMatching(details?.id);
+  const billingSummary = billResponse?.success ? billResponse.data : undefined;
   const statusMutation = useUpdatePurchaseOrderStatus();
   const deleteMutation = useDeletePurchaseOrder();
 
@@ -277,6 +283,13 @@ const PurchaseOrders: React.FC = () => {
         onSuccess={() => { setReceiving(null); refetch(); }}
       />
 
+      <SupplierBillModal
+        isOpen={!!billing}
+        order={billing}
+        onClose={() => setBilling(null)}
+        onSuccess={() => { setBilling(null); refreshDetails(); }}
+      />
+
       <Dialog open={!!details} onOpenChange={(open) => !open && setDetails(null)}>
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader><DialogTitle>{details?.poNumber} — {details?.supplierName}</DialogTitle></DialogHeader>
@@ -315,6 +328,50 @@ const PurchaseOrders: React.FC = () => {
                 <div><p className="text-xs text-slate-400">{isRTL ? "قبل الضريبة" : "Subtotal"}</p><p className="font-medium tabular-nums">{formatCurrency(details.subtotal)}</p></div>
                 <div><p className="text-xs text-slate-400">{isRTL ? "الضريبة" : "VAT"}</p><p className="font-medium tabular-nums">{formatCurrency(details.vatAmount)}</p></div>
                 <div><p className="text-xs text-slate-400">{isRTL ? "المستلم" : "Received value"}</p><p className="font-medium tabular-nums">{formatCurrency(details.receivedValue)}</p></div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
+                    {isRTL ? "فواتير المورد والمطابقة" : "Supplier bills and matching"}
+                  </h4>
+                  {roleAccess.canCreate() && details.items.some((i) => i.remainingToBill > 0) && (
+                    <Button size="sm" variant="outline" onClick={() => setBilling(details)}>
+                      <FileCheck2 className="h-4 w-4" />
+                      {isRTL ? "تسجيل فاتورة مورد" : "Record supplier bill"}
+                    </Button>
+                  )}
+                </div>
+                {billingSummary && billingSummary.bills.length > 0 ? (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400">
+                      <span>{isRTL ? "قيمة المستلم" : "Received"}: <strong className="text-slate-700 dark:text-slate-200">{formatCurrency(billingSummary.receivedValue)}</strong></span>
+                      <span>{isRTL ? "قيمة المفوتر" : "Billed"}: <strong className="text-slate-700 dark:text-slate-200">{formatCurrency(billingSummary.billedValue)}</strong></span>
+                      {billingSummary.hasVariance && <span className="text-amber-600 dark:text-amber-400">{isRTL ? "يوجد فرق سعري" : "Price variance detected"}</span>}
+                    </div>
+                    {billingSummary.bills.map((bill) => (
+                      <div key={bill.invoiceId} className="flex flex-col gap-1 rounded-lg border border-slate-200 px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-slate-900 dark:text-white">
+                            {bill.invoiceNumber}
+                            {bill.supplierInvoiceNumber && <span className="ms-2 text-xs font-normal text-slate-500">{bill.supplierInvoiceNumber}</span>}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {new Date(bill.issueDate).toLocaleDateString()} · {bill.status}
+                            {bill.hasVariance && <span className="ms-2 text-amber-600 dark:text-amber-400">{isRTL ? "فرق" : "variance"}</span>}
+                          </p>
+                        </div>
+                        <span className="font-semibold tabular-nums text-slate-900 dark:text-white">{formatCurrency(bill.total)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="rounded-lg border border-dashed border-slate-200 px-3 py-3 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                    {isRTL
+                      ? "لا توجد فواتير مورد مرتبطة بعد. سجّل فاتورة من الكميات المستلمة."
+                      : "No supplier bills linked yet. Record one from the received quantities."}
+                  </p>
+                )}
               </div>
 
               {details.notes && <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">{details.notes}</p>}

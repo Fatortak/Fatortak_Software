@@ -21,6 +21,14 @@ namespace fatortak.Entities
         public string? Notes { get; set; }
         public string? Terms { get; set; }
         public string InvoiceType { get; set; } = InvoiceTypes.Sell.ToString();
+        public string DocumentType { get; set; } = "Invoice";
+        public Guid? OriginalInvoiceId { get; set; }
+        public string? NoteReason { get; set; }
+        public decimal AdjustedAmount { get; set; }
+        public Guid? PurchaseOrderId { get; set; }
+        public Guid? GoodsReceiptNoteId { get; set; }
+        public string? SupplierInvoiceNumber { get; set; }
+        public DateTime? PostedAt { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         /// <summary>
         /// Timestamp when the entry was last updated

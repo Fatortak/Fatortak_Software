@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import SellInvoices from "./pages/SellInvoices";
 import BuyInvoices from "./pages/BuyInvoices";
 import Quotations from "./pages/Quotations";
+import CreditDebitNotes from "./pages/CreditDebitNotes";
 import SalesOrders from "./pages/SalesOrders";
 import PurchaseRequisitions from "./pages/PurchaseRequisitions";
 import RequestForQuotations from "./pages/RequestForQuotations";
@@ -144,6 +145,7 @@ function AppContent() {
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="sell-invoices" element={<SellInvoices />} />
+          <Route path="credit-notes" element={<CreditDebitNotes />} />
           <Route path="quotations" element={<Quotations />} />
           <Route path="sales-orders" element={<SalesOrders />} />
           <Route path="purchase-requisitions" element={<PurchaseRequisitions />} />

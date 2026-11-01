@@ -6,6 +6,9 @@ import {
   PurchaseOrderDto,
   PurchaseOrderFilterDto,
   PurchaseOrderUpdateDto,
+  SupplierBillCreateDto,
+  SupplierBillDto,
+  SupplierBillMatchingDto,
 } from "../types/api";
 
 const buildParams = (
@@ -50,4 +53,13 @@ export const purchaseOrderService = {
     apiClient.post<PurchaseOrderDto>(`/api/purchaseorders/${id}/status`, {
       status,
     }),
+  getSupplierBills: (id: string) =>
+    apiClient.get<SupplierBillMatchingDto>(
+      `/api/purchaseorders/${id}/supplier-bills`
+    ),
+  createSupplierBill: (id: string, data: SupplierBillCreateDto) =>
+    apiClient.post<SupplierBillDto>(
+      `/api/purchaseorders/${id}/supplier-bills`,
+      data
+    ),
 };

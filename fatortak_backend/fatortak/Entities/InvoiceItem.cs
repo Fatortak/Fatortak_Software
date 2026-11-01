@@ -12,6 +12,7 @@
         public decimal? VatRate { get; set; }
         public decimal? LineTotal { get; set; }
         public decimal? Discount { get; set; }
+        public Guid? PurchaseOrderItemId { get; set; }
 
         public Tenant Tenant { get; set; }
         public Invoice Invoice { get; set; }
