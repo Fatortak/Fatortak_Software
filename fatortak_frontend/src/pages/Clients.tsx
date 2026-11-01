@@ -25,6 +25,7 @@ import {
 } from "../hooks/useCustomers";
 import { PaginationDto, CustomerFilterDto } from "../types/api";
 import { toast } from "react-toastify";
+import { useBulkActivateCustomers, useBulkDeleteCustomers } from "@/hooks/useBulkActions";
 import { Switch } from "../components/ui/switch";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -48,6 +49,7 @@ const Clients: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editCustomerId, setEditCustomerId] = useState<string | null>(null);
   const [deleteCustomerId, setDeleteCustomerId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const navigate = useNavigate();
 
@@ -77,6 +79,8 @@ const Clients: React.FC = () => {
 
   const deleteCustomerMutation = useDeleteCustomer();
   const toggleActivationMutation = useToggleCustomerActivation();
+  const bulkDeleteMutation = useBulkDeleteCustomers();
+  const bulkActivateMutation = useBulkActivateCustomers();
 
   // Filter only clients (non-suppliers) on the frontend for now
   const allCustomers = customersResponse?.success
@@ -137,8 +141,58 @@ const Clients: React.FC = () => {
     }
   };
 
+  const toggleSelected = (customerId: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(customerId)
+        ? prev.filter((id) => id !== customerId)
+        : [...prev, customerId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) =>
+      prev.length === customers.length ? [] : customers.map((customer: any) => customer.id)
+    );
+  };
+
+  const runBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    try {
+      const result = await bulkDeleteMutation.mutateAsync(selectedIds);
+      toast.success(
+        isRTL
+          ? `تم حذف ${result.data?.affected || 0} عميل`
+          : `${result.data?.affected || 0} customer(s) deleted`
+      );
+      setSelectedIds([]);
+      refetch();
+    } catch (error: any) {
+      toast.error(error?.message || "Could not delete selected customers");
+    }
+  };
+
+  const runBulkActivate = async (isActive: boolean) => {
+    if (selectedIds.length === 0) return;
+    try {
+      const result = await bulkActivateMutation.mutateAsync({
+        ids: selectedIds,
+        isActive,
+      });
+      toast.success(
+        isRTL
+          ? `تم تحديث ${result.data?.affected || 0} عميل`
+          : `${result.data?.affected || 0} customer(s) updated`
+      );
+      setSelectedIds([]);
+      refetch();
+    } catch (error: any) {
+      toast.error(error?.message || "Could not update selected customers");
+    }
+  };
+
   const handleConfirmDelete = async () => {
     if (!deleteCustomerId) return;
+
 
     try {
       const result = await deleteCustomerMutation.mutateAsync(deleteCustomerId);
@@ -344,12 +398,62 @@ const Clients: React.FC = () => {
         {/* Enhanced Customers Display */}
         {!isLoading && (
           <Card className="border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:border-slate-800 dark:bg-slate-900">
+            {selectedIds.length > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-brand-50/60 px-4 py-3 dark:border-slate-800 dark:bg-brand-950/20">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                  {isRTL
+                    ? `تم تحديد ${selectedIds.length}`
+                    : `${selectedIds.length} selected`}
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => runBulkActivate(true)}
+                    loading={bulkActivateMutation.isPending}
+                  >
+                    <UserCheck className="h-4 w-4" />
+                    {isRTL ? "تفعيل" : "Activate"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => runBulkActivate(false)}
+                    loading={bulkActivateMutation.isPending}
+                  >
+                    <UserX className="h-4 w-4" />
+                    {isRTL ? "تعطيل" : "Deactivate"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={runBulkDelete}
+                    loading={bulkDeleteMutation.isPending}
+                  >
+                    <Trash2 className="h-4 w-4 text-rose-500" />
+                    {isRTL ? "حذف" : "Delete"}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>
+                    {isRTL ? "إلغاء التحديد" : "Clear"}
+                  </Button>
+                </div>
+              </div>
+            )}
             {/* Desktop Table */}
             <div className="hidden lg:block">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b bg-slate-50/80 dark:bg-slate-800/60">
+                      <th className="w-10 px-4 py-3">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 accent-brand-600"
+                          checked={customers.length > 0 && selectedIds.length === customers.length}
+                          onChange={toggleSelectAll}
+                          aria-label={isRTL ? "تحديد الكل" : "Select all"}
+                        />
+                      </th>
                       <th
                         className={`px-4 py-3 text-${
                           isRTL ? "right" : "left"
@@ -402,6 +506,15 @@ const Clients: React.FC = () => {
                           key={customer?.id}
                           className="hover:bg-muted/20 transition-colors"
                         >
+                          <td className="px-4 py-3">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-brand-600"
+                              checked={selectedIds.includes(customer.id)}
+                              onChange={() => toggleSelected(customer.id)}
+                              aria-label={isRTL ? "تحديد العميل" : "Select customer"}
+                            />
+                          </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center space-x-3">
                               <div

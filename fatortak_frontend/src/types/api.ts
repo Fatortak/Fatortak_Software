@@ -1800,3 +1800,43 @@ export interface UserSessionDto {
   isCurrent: boolean;
   tenantName?: string;
 }
+
+// Data import DTOs
+export interface ImportRowErrorDto {
+  row: number;
+  message: string;
+}
+
+export interface ImportResultDto {
+  imported: number;
+  skipped: number;
+  failed: number;
+  errors: ImportRowErrorDto[];
+}
+
+// Saved view DTOs
+export interface SavedViewDto {
+  id: string;
+  userId: string;
+  pageKey: string;
+  name: string;
+  queryJson: string;
+  isShared: boolean;
+  isOwner: boolean;
+  userName?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface SavedViewCreateDto {
+  pageKey: string;
+  name: string;
+  queryJson: string;
+  isShared: boolean;
+}
+
+// Bulk action DTOs
+export interface BulkActionResultDto {
+  affected: number;
+  missing: number;
+}

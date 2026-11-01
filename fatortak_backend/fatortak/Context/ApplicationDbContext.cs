@@ -46,6 +46,7 @@ namespace fatortak.Context
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<DocumentRevision> DocumentRevisions { get; set; }
         public DbSet<UserSession> UserSessions { get; set; }
+        public DbSet<SavedView> SavedViews { get; set; }
         public DbSet<BankStatement> BankStatements { get; set; }
         public DbSet<BankStatementLine> BankStatementLines { get; set; }
         public DbSet<PriceList> PriceLists { get; set; }

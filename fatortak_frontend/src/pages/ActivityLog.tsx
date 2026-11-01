@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuditLogs } from "@/hooks/useAuditLogs";
+import SavedViewBar from "@/components/SavedViewBar";
 import type { AuditLogDto } from "@/types/api";
 
 const actionTone = (action: string) => {
@@ -115,6 +116,20 @@ const ActivityLog: React.FC = () => {
               <SelectItem value="Deleted">{isRTL ? "حذف" : "Deleted"}</SelectItem>
             </SelectContent>
           </Select>
+          <SavedViewBar
+            pageKey="activity"
+            currentQuery={{
+              search: search || undefined,
+              entityType: entityType === "all" ? undefined : entityType,
+              action: action === "all" ? undefined : action,
+            }}
+            onApply={(query) => {
+              setSearch(query.search || "");
+              setEntityType(query.entityType || "all");
+              setAction(query.action || "all");
+              setPagination((p) => ({ ...p, pageNumber: 1 }));
+            }}
+          />
         </CardContent>
       </Card>
 
