@@ -1611,3 +1611,60 @@ export interface ResolvePriceDto {
   priceListName?: string;
   source: string;
 }
+
+// Sales commission DTOs
+export interface CommissionRuleDto {
+  id: string;
+  name: string;
+  userId?: string;
+  userName?: string;
+  rate: number;
+  basis: string;
+  isActive: boolean;
+  effectiveFrom: string;
+  effectiveTo?: string;
+}
+
+export interface CommissionRuleCreateDto {
+  name: string;
+  userId?: string;
+  rate: number;
+  basis: string;
+  isActive: boolean;
+  effectiveFrom: string;
+  effectiveTo?: string;
+}
+
+export interface CommissionRuleUpdateDto extends CommissionRuleCreateDto {}
+
+export interface SalesCommissionDto {
+  id: string;
+  invoiceId: string;
+  invoiceNumber: string;
+  customerName?: string;
+  ruleId: string;
+  ruleName: string;
+  userId?: string;
+  userName?: string;
+  basisAmount: number;
+  rate: number;
+  amount: number;
+  status: string;
+  basis: string;
+  createdAt: string;
+  approvedAt?: string;
+  paidAt?: string;
+  notes?: string;
+}
+
+export interface GenerateCommissionDto {
+  invoiceId: string;
+  ruleId?: string;
+  notes?: string;
+}
+
+export interface CommissionFilterDto {
+  search?: string;
+  status?: string;
+  userId?: string;
+}

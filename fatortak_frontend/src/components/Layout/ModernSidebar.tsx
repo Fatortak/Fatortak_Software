@@ -44,6 +44,7 @@ import {
   Server,
   ShieldCheck,
   History,
+  BadgePercent,
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -185,6 +186,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
       name: isRTL ? "قوائم الأسعار" : "Price Lists",
       icon: Tag,
       path: "/price-lists",
+    },
+    {
+      name: isRTL ? "عمولات المبيعات" : "Sales Commissions",
+      icon: BadgePercent,
+      path: "/commissions",
     },
     {
       name: isRTL ? "عروض الأسعار" : "Quotations",
