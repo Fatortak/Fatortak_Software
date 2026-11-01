@@ -1343,3 +1343,76 @@ export interface InvoiceNoteFilterDto {
   fromDate?: string;
   toDate?: string;
 }
+
+// Recurring invoice DTOs
+export interface RecurringInvoiceItemDto {
+  id: string;
+  itemId?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  vatRate?: number;
+  discount: number;
+  lineTotal: number;
+}
+
+export interface RecurringInvoiceDto {
+  id: string;
+  recurringNumber: string;
+  name: string;
+  customerId: string;
+  customerName: string;
+  branchId?: string;
+  projectId?: string;
+  invoiceType: string;
+  frequency: string;
+  startDate: string;
+  endDate?: string;
+  nextRunDate: string;
+  dueDays: number;
+  autoSend: boolean;
+  status: string;
+  currency?: string;
+  notes?: string;
+  terms?: string;
+  lastRunAt?: string;
+  runCount: number;
+  createdAt: string;
+  total: number;
+  items: RecurringInvoiceItemDto[];
+}
+
+export interface RecurringInvoiceItemCreateDto {
+  itemId?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  vatRate?: number;
+  discount: number;
+}
+
+export interface RecurringInvoiceCreateDto {
+  name: string;
+  customerId: string;
+  branchId?: string;
+  projectId?: string;
+  invoiceType: string;
+  frequency: string;
+  startDate: string;
+  endDate?: string;
+  dueDays: number;
+  autoSend: boolean;
+  currency?: string;
+  notes?: string;
+  terms?: string;
+  items: RecurringInvoiceItemCreateDto[];
+}
+
+export interface RecurringInvoiceUpdateDto extends RecurringInvoiceCreateDto {}
+
+export interface RecurringInvoiceFilterDto {
+  search?: string;
+  status?: string;
+  frequency?: string;
+  customerId?: string;
+}

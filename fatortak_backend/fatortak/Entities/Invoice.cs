@@ -27,6 +27,7 @@ namespace fatortak.Entities
         public decimal AdjustedAmount { get; set; }
         public Guid? PurchaseOrderId { get; set; }
         public Guid? GoodsReceiptNoteId { get; set; }
+        public Guid? RecurringInvoiceId { get; set; }
         public string? SupplierInvoiceNumber { get; set; }
         public DateTime? PostedAt { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

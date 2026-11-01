@@ -160,6 +160,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
       path: "/credit-notes",
     },
     {
+      name: isRTL ? "الفواتير المتكررة" : "Recurring Invoices",
+      icon: CalendarDays,
+      path: "/recurring-invoices",
+    },
+    {
       name: isRTL ? "عروض الأسعار" : "Quotations",
       icon: ClipboardList,
       path: "/quotations",

@@ -1750,6 +1750,7 @@ namespace fatortak.Services.InvoiceService
                 AdjustedAmount = invoice.AdjustedAmount,
                 PurchaseOrderId = invoice.PurchaseOrderId,
                 GoodsReceiptNoteId = invoice.GoodsReceiptNoteId,
+                RecurringInvoiceId = invoice.RecurringInvoiceId,
                 SupplierInvoiceNumber = invoice.SupplierInvoiceNumber,
                 Notes = invoice.Notes,
                 Terms = invoice.Terms,

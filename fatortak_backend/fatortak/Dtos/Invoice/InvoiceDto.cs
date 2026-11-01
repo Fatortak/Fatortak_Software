@@ -30,6 +30,7 @@ namespace fatortak.Dtos.Invoice
         public decimal AdjustedAmount { get; set; }
         public Guid? PurchaseOrderId { get; set; }
         public Guid? GoodsReceiptNoteId { get; set; }
+        public Guid? RecurringInvoiceId { get; set; }
         public string? SupplierInvoiceNumber { get; set; }
         public CompanyDto? Company { get; set; }
         public List<InvoiceItemDto> Items { get; set; }
