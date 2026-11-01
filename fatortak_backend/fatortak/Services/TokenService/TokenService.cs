@@ -15,7 +15,7 @@ namespace fatortak.Services.TokenService
             _configuration = configuration;
         }
 
-        public string GenerateToken(ApplicationUser user, Guid? tenantId)
+        public string GenerateToken(ApplicationUser user, Guid? tenantId, Guid? sessionId = null)
         {
             var claims = new List<Claim>
         {
@@ -30,6 +30,11 @@ namespace fatortak.Services.TokenService
             if (tenantId != null)
             {
                 claims.Add(new Claim("tenant_id", tenantId.ToString()));
+            }
+
+            if (sessionId.HasValue)
+            {
+                claims.Add(new Claim("session_id", sessionId.Value.ToString()));
             }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(

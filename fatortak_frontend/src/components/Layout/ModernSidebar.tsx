@@ -43,6 +43,7 @@ import {
   Tag,
   Server,
   ShieldCheck,
+  MonitorSmartphone,
   History,
   BadgePercent,
 } from "lucide-react";
@@ -398,6 +399,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
       ],
     },
     { name: t("team") || "Team", icon: UserCheck, path: "/team" },
+    { name: isRTL ? "الجلسات والأجهزة" : "Sessions & Devices", icon: MonitorSmartphone, path: "/sessions" },
     { name: t("settings") || "Settings", icon: Settings, path: "/settings" },
     ...(canViewInstallation
       ? [

@@ -83,6 +83,7 @@ import Cheques from "./pages/Cheques";
 import JournalEntries from "./pages/JournalEntries";
 import Stakeholders from "./pages/Stakeholders";
 import InstallationInsights from "./pages/InstallationInsights";
+import Sessions from "./pages/Sessions";
 import InvoiceTemplatesHub from "./pages/InvoiceTemplate/InvoiceTemplatesHub";
 
 import ExpenseCategories from "./pages/ExpenseCategories";
@@ -207,6 +208,7 @@ function AppContent() {
           {/* 🆕 NEW ROUTES - Stock Reports */}
 
           <Route path="team" element={<Team />} />
+          <Route path="sessions" element={<Sessions />} />
           <Route path="settings" element={<Settings />} />
           <Route path="installation" element={<InstallationInsights />} />
           <Route path="employees" element={<Employees />} />

@@ -20,6 +20,34 @@ interface InstallationStats {
     registeredLast30Days: number;
   };
   data: Record<string, number>;
+  sessions: {
+    total: number;
+    active: number;
+    recent: Array<{
+      id: string;
+      userName: string;
+      ipAddress?: string;
+      createdAt: string;
+      lastSeenAt: string;
+      expiresAt: string;
+      revokedAt?: string;
+    }>;
+  };
+  system: {
+    version: string;
+    runtime: string;
+    environment: string;
+    databaseProvider?: string;
+    latestMigration?: string;
+    backup: {
+      configured: boolean;
+      status: string;
+      directory?: string;
+      lastBackupAt?: string;
+      fileName?: string;
+      ageDays?: number;
+    };
+  };
   recentUsers: Array<{
     id: string;
     fullName: string;
@@ -143,6 +171,10 @@ const InstallationInsights = () => {
             <Row label="Registration" value={stats.registrationEnabled ? "Open" : "Admin only"} />
             <Row label="Generated" value={parseUtc(stats.generatedAt)?.toLocaleString() ?? "—"} />
             <Row label="Tenants" value={String(stats.data.tenants ?? 1)} />
+            <Row label="Version" value={stats.system?.version ?? "—"} />
+            <Row label="Runtime" value={stats.system?.runtime ?? "—"} />
+            <Row label="Environment" value={stats.system?.environment ?? "—"} />
+            <Row label="Latest migration" value={stats.system?.latestMigration ?? "—"} />
           </dl>
         </div>
 
@@ -170,6 +202,58 @@ const InstallationInsights = () => {
                 </div>
               ))}
           </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="mb-4 flex items-center gap-2">
+            <UserCheck className="h-5 w-5 text-indigo-600" />
+            <h2 className="font-semibold text-slate-900 dark:text-white">
+              Sessions
+            </h2>
+          </div>
+          <dl className="space-y-3 text-sm">
+            <Row label="Active sessions" value={String(stats.sessions?.active ?? 0)} />
+            <Row label="Recorded sessions" value={String(stats.sessions?.total ?? 0)} />
+            <Row
+              label="Most recent activity"
+              value={
+                parseUtc(stats.sessions?.recent?.[0]?.lastSeenAt)?.toLocaleString() ??
+                "—"
+              }
+            />
+          </dl>
+          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+            Users can review and revoke their own devices from Sessions &amp; Devices.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="mb-4 flex items-center gap-2">
+            <Server className="h-5 w-5 text-amber-600" />
+            <h2 className="font-semibold text-slate-900 dark:text-white">
+              Backup and upgrade
+            </h2>
+          </div>
+          <dl className="space-y-3 text-sm">
+            <Row label="Backup status" value={stats.system?.backup?.status ?? "NotConfigured"} />
+            <Row label="Backup directory" value={stats.system?.backup?.directory ?? "Not configured"} />
+            <Row label="Latest backup" value={stats.system?.backup?.fileName ?? "—"} />
+            <Row
+              label="Backup time"
+              value={
+                parseUtc(stats.system?.backup?.lastBackupAt)?.toLocaleString() ?? "—"
+              }
+            />
+            <Row label="Database" value={stats.system?.databaseProvider ?? "—"} />
+          </dl>
+          {!stats.system?.backup?.configured && (
+            <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+              Set <code>SelfHosted:BackupDirectory</code> to a folder containing
+              <code className="mx-1">.bak</code> files to track backup freshness here.
+            </p>
+          )}
         </div>
       </div>
 

@@ -28,6 +28,7 @@ namespace fatortak.Services.AuthService
         private readonly ILogger<AuthService> _logger;
         private readonly ApplicationDbContext _context;
         private readonly IDeploymentMode _deployment;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public AuthService(
             UserManager<ApplicationUser> userManager,
@@ -38,7 +39,8 @@ namespace fatortak.Services.AuthService
             ILogger<AuthService> logger,
             ApplicationDbContext context,
             IEmailService emailServices,
-            IDeploymentMode deployment)
+            IDeploymentMode deployment,
+            IHttpContextAccessor httpContextAccessor)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -49,6 +51,27 @@ namespace fatortak.Services.AuthService
             _context = context;
             _emailServices = emailServices;
             _deployment = deployment;
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        private async Task<UserSession?> CreateSessionAsync(ApplicationUser user, Guid? tenantId)
+        {
+            if (!tenantId.HasValue) return null;
+
+            var http = _httpContextAccessor.HttpContext;
+            var session = new UserSession
+            {
+                TenantId = tenantId.Value,
+                UserId = user.Id,
+                IpAddress = http?.Connection?.RemoteIpAddress?.ToString(),
+                UserAgent = http?.Request?.Headers.UserAgent.ToString() is { Length: > 0 } agent
+                    ? agent[..Math.Min(agent.Length, 400)]
+                    : null,
+                ExpiresAt = DateTime.UtcNow.AddDays(20)
+            };
+            _context.UserSessions.Add(session);
+            await _context.SaveChangesAsync();
+            return session;
         }
 
         public async Task<ServiceResult<AuthResponseDto>> LoginAsync(LoginDto dto)
@@ -72,7 +95,8 @@ namespace fatortak.Services.AuthService
 
                 var primaryTenant = tenantsResult.FirstOrDefault();
 
-                var token = _tokenService.GenerateToken(user, primaryTenant?.Id);
+                var session = await CreateSessionAsync(user, primaryTenant?.Id);
+                var token = _tokenService.GenerateToken(user, primaryTenant?.Id, session?.Id);
 
                 return ServiceResult<AuthResponseDto>.SuccessResult(new AuthResponseDto
                 {
@@ -138,7 +162,8 @@ namespace fatortak.Services.AuthService
                     user.TenantId = selfHostedTenant.Id;
                     await _userManager.UpdateAsync(user);
 
-                    var existingTenantToken = _tokenService.GenerateToken(user, selfHostedTenant.Id);
+                    var selfHostedSession = await CreateSessionAsync(user, selfHostedTenant.Id);
+                    var existingTenantToken = _tokenService.GenerateToken(user, selfHostedTenant.Id, selfHostedSession?.Id);
                     await transaction.CommitAsync();
 
                     return ServiceResult<AuthResponseDto>.SuccessResult(new AuthResponseDto
@@ -202,7 +227,8 @@ namespace fatortak.Services.AuthService
                 }
 
                 // 8. Generate JWT Token
-                var token = _tokenService.GenerateToken(user, tenant.Id);
+                var session = await CreateSessionAsync(user, tenant.Id);
+                var token = _tokenService.GenerateToken(user, tenant.Id, session?.Id);
 
                 // 9. Send Welcome Email (fire-and-forget)
                 _ = SendWelcomeEmailAsync(user, tenant);
@@ -453,7 +479,8 @@ namespace fatortak.Services.AuthService
                 if (tenant == null)
                     return ServiceResult<AuthResponseDto>.Failure("Tenant not found or inactive.");
 
-                var token = _tokenService.GenerateToken(user, tenant.Id);
+                var session = await CreateSessionAsync(user, tenant.Id);
+                var token = _tokenService.GenerateToken(user, tenant.Id, session?.Id);
 
                 return ServiceResult<AuthResponseDto>.SuccessResult(new AuthResponseDto
                 {

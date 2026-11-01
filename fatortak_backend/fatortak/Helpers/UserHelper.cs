@@ -55,6 +55,13 @@ namespace fatortak.Helpers
 
             return null; // Or handle accordingly if user is not found
         }
+        // Method to get the current session id
+        public static string GetSessionId()
+        {
+            var claimsPrincipal = _httpContextAccessor?.HttpContext?.User;
+            return claimsPrincipal?.FindFirst("session_id")?.Value;
+        }
+
         public static bool IaSysAdminUser()
         {
             var claimsPrincipal = _httpContextAccessor?.HttpContext?.User;

@@ -1785,3 +1785,18 @@ export interface DocumentRevisionDto {
   userName?: string;
   createdAt: string;
 }
+
+// User session DTOs
+export interface UserSessionDto {
+  id: string;
+  ipAddress?: string;
+  userAgent?: string;
+  deviceLabel: string;
+  createdAt: string;
+  lastSeenAt: string;
+  expiresAt: string;
+  revokedAt?: string;
+  isActive: boolean;
+  isCurrent: boolean;
+  tenantName?: string;
+}

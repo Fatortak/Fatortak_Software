@@ -5,6 +5,7 @@ using fatortak.Services.Deployment;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace fatortak.Controllers
 {
@@ -15,11 +16,16 @@ namespace fatortak.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IDeploymentMode _deployment;
+        private readonly IConfiguration _configuration;
 
-        public SelfHostedController(ApplicationDbContext context, IDeploymentMode deployment)
+        public SelfHostedController(
+            ApplicationDbContext context,
+            IDeploymentMode deployment,
+            IConfiguration configuration)
         {
             _context = context;
             _deployment = deployment;
+            _configuration = configuration;
         }
 
         [HttpGet("stats")]
@@ -53,6 +59,7 @@ namespace fatortak.Controllers
             var employeesQuery = _context.Employees.AsQueryable();
             var chequesQuery = _context.Cheques.AsQueryable();
             var stakeholdersQuery = _context.Stakeholders.AsQueryable();
+            var sessionsQuery = _context.UserSessions.AsQueryable();
 
             if (scoped)
             {
@@ -69,6 +76,7 @@ namespace fatortak.Controllers
                 employeesQuery = employeesQuery.Where(x => x.TenantId == tenantId);
                 chequesQuery = chequesQuery.Where(x => x.TenantId == tenantId);
                 stakeholdersQuery = stakeholdersQuery.Where(x => x.TenantId == tenantId);
+                sessionsQuery = sessionsQuery.Where(s => s.TenantId == tenantId);
             }
 
             var stats = new
@@ -84,6 +92,35 @@ namespace fatortak.Controllers
                     online = await usersQuery.CountAsync(u =>
                         u.LastSeenAt != null && u.LastSeenAt >= onlineCutoff),
                     registeredLast30Days = await usersQuery.CountAsync(u => u.CreatedAt >= monthAgo)
+                },
+                sessions = new
+                {
+                    total = await sessionsQuery.CountAsync(),
+                    active = await sessionsQuery.CountAsync(s =>
+                        s.RevokedAt == null && s.ExpiresAt > DateTime.UtcNow),
+                    recent = await sessionsQuery
+                        .OrderByDescending(s => s.LastSeenAt)
+                        .Take(10)
+                        .Select(s => new
+                        {
+                            s.Id,
+                            UserName = s.User.FirstName + " " + s.User.LastName,
+                            s.IpAddress,
+                            s.CreatedAt,
+                            s.LastSeenAt,
+                            s.ExpiresAt,
+                            s.RevokedAt
+                        })
+                        .ToListAsync()
+                },
+                system = new
+                {
+                    version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown",
+                    runtime = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+                    environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production",
+                    databaseProvider = _context.Database.ProviderName,
+                    latestMigration = (await _context.Database.GetAppliedMigrationsAsync()).LastOrDefault(),
+                    backup = BuildBackupStatus()
                 },
                 data = new
                 {
@@ -157,6 +194,56 @@ namespace fatortak.Controllers
                 .ToListAsync();
 
             return Ok(new { count = users.Count, users });
+        }
+
+        private object BuildBackupStatus()
+        {
+            var directory = _configuration["SelfHosted:BackupDirectory"];
+            if (string.IsNullOrWhiteSpace(directory))
+                return new
+                {
+                    configured = false,
+                    status = "NotConfigured",
+                    directory = (string?)null,
+                    lastBackupAt = (DateTime?)null,
+                    fileName = (string?)null
+                };
+
+            if (!Directory.Exists(directory))
+                return new
+                {
+                    configured = true,
+                    status = "DirectoryNotFound",
+                    directory,
+                    lastBackupAt = (DateTime?)null,
+                    fileName = (string?)null
+                };
+
+            var latest = new DirectoryInfo(directory)
+                .EnumerateFiles("*.bak", SearchOption.TopDirectoryOnly)
+                .OrderByDescending(f => f.LastWriteTimeUtc)
+                .FirstOrDefault();
+
+            if (latest == null)
+                return new
+                {
+                    configured = true,
+                    status = "NoBackup",
+                    directory,
+                    lastBackupAt = (DateTime?)null,
+                    fileName = (string?)null
+                };
+
+            var age = DateTime.UtcNow - latest.LastWriteTimeUtc;
+            return new
+            {
+                configured = true,
+                status = age.TotalDays <= 7 ? "Healthy" : "Stale",
+                directory,
+                lastBackupAt = (DateTime?)latest.LastWriteTimeUtc,
+                fileName = latest.Name,
+                ageDays = Math.Round(age.TotalDays, 1)
+            };
         }
     }
 }

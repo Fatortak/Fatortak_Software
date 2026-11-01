@@ -59,6 +59,25 @@ namespace fatortak.Middlewares
             }
 
             var now = DateTime.UtcNow;
+            var sessionClaim = context.User.FindFirst("session_id")?.Value;
+            if (Guid.TryParse(sessionClaim, out var sessionId))
+            {
+                var activeSession = await dbContext.UserSessions
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(s => s.Id == sessionId &&
+                                              s.UserId == userId &&
+                                              s.RevokedAt == null &&
+                                              s.ExpiresAt > now);
+                if (activeSession == null)
+                {
+                    await RejectAsync(context, StatusCodes.Status401Unauthorized,
+                        "This session has expired or been revoked. Sign in again.");
+                    return;
+                }
+
+                context.Items["CurrentSessionId"] = sessionId;
+            }
+
             if (!LastSeenTouch.TryGetValue(user.Id, out var lastTouch) ||
                 now - lastTouch > TimeSpan.FromMinutes(1))
             {
@@ -66,6 +85,13 @@ namespace fatortak.Middlewares
                 await dbContext.Users
                     .Where(u => u.Id == user.Id)
                     .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.LastSeenAt, now));
+
+                if (Guid.TryParse(sessionClaim, out var touchSessionId))
+                {
+                    await dbContext.UserSessions
+                        .Where(s => s.Id == touchSessionId && s.UserId == user.Id)
+                        .ExecuteUpdateAsync(setters => setters.SetProperty(s => s.LastSeenAt, now));
+                }
             }
 
             var isSysAdmin = string.Equals(user.Role, RoleEnum.SysAdmin.ToString(), StringComparison.OrdinalIgnoreCase);
