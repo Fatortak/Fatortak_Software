@@ -1553,3 +1553,61 @@ export interface BankTransactionCandidateDto {
   direction: string;
   type?: string;
 }
+
+// Price list DTOs
+export interface PriceListItemDto {
+  id: string;
+  itemId: string;
+  itemName: string;
+  unitPrice: number;
+  minQuantity: number;
+  maxQuantity?: number;
+}
+
+export interface PriceListDto {
+  id: string;
+  name: string;
+  currency?: string;
+  validFrom: string;
+  validTo?: string;
+  isActive: boolean;
+  isDefault: boolean;
+  notes?: string;
+  createdAt: string;
+  itemCount: number;
+  customerCount: number;
+  items: PriceListItemDto[];
+  customerIds: string[];
+  customerNames: string[];
+}
+
+export interface PriceListItemCreateDto {
+  itemId: string;
+  unitPrice: number;
+  minQuantity: number;
+  maxQuantity?: number;
+}
+
+export interface PriceListCreateDto {
+  name: string;
+  currency?: string;
+  validFrom: string;
+  validTo?: string;
+  isActive: boolean;
+  isDefault: boolean;
+  notes?: string;
+  items: PriceListItemCreateDto[];
+}
+
+export interface PriceListUpdateDto extends PriceListCreateDto {}
+
+export interface PriceListFilterDto {
+  search?: string;
+  isActive?: boolean;
+}
+
+export interface ResolvePriceDto {
+  unitPrice: number;
+  priceListName?: string;
+  source: string;
+}

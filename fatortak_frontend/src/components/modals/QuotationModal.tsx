@@ -27,6 +27,7 @@ import {
   useUpdateQuotation,
 } from "@/hooks/useQuotations";
 import { formatCurrency } from "@/Helpers/formatCurrency";
+import { pricingService } from "@/services/pricingService";
 import type { QuotationDto } from "@/types/api";
 
 interface QuotationModalProps {
@@ -136,12 +137,24 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
       prev.map((line) => (line.key === key ? { ...line, ...patch } : line))
     );
 
-  const chooseItem = (key: string, itemId: string) => {
+  const chooseItem = async (key: string, itemId: string) => {
     const item = items.find((i: any) => i.id === itemId);
+    const currentLine = lines.find((line) => line.key === key);
+    let unitPrice = item?.unitPrice ?? 0;
+    try {
+      const result = await pricingService.resolve(
+        customerId || "00000000-0000-0000-0000-000000000000",
+        itemId,
+        currentLine?.quantity || 1
+      );
+      if (result.success) unitPrice = result.data.unitPrice;
+    } catch {
+      // Fall back to the item price when pricing cannot be resolved.
+    }
     updateLine(key, {
       itemId,
       description: item?.name || "",
-      unitPrice: item?.unitPrice ?? 0,
+      unitPrice,
       vatRate: item?.vatRate ?? 0.14,
     });
   };

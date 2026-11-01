@@ -959,6 +959,36 @@ namespace fatortak.Migrations
                     b.ToTable("Customers", "dbo");
                 });
 
+            modelBuilder.Entity("fatortak.Entities.CustomerPriceList", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PriceListId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("PriceListId");
+
+                    b.HasIndex("TenantId", "CustomerId")
+                        .IsUnique();
+
+                    b.ToTable("CustomerPriceLists", "dbo");
+                });
+
             modelBuilder.Entity("fatortak.Entities.Department", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1863,6 +1893,88 @@ namespace fatortak.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("PayrollItems", "dbo");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.PriceList", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ValidTo")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Name");
+
+                    b.ToTable("PriceLists", "dbo");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.PriceListItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("MaxQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MinQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("PriceListId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("PriceListId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("PriceListItems", "dbo");
                 });
 
             modelBuilder.Entity("fatortak.Entities.Project", b =>
@@ -3311,6 +3423,33 @@ namespace fatortak.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("fatortak.Entities.CustomerPriceList", b =>
+                {
+                    b.HasOne("fatortak.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.PriceList", "PriceList")
+                        .WithMany("Customers")
+                        .HasForeignKey("PriceListId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("PriceList");
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("fatortak.Entities.Department", b =>
                 {
                     b.HasOne("fatortak.Entities.Tenant", "Tenant")
@@ -3672,6 +3811,44 @@ namespace fatortak.Migrations
                     b.Navigation("Employee");
 
                     b.Navigation("Payroll");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.PriceList", b =>
+                {
+                    b.HasOne("fatortak.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.PriceListItem", b =>
+                {
+                    b.HasOne("fatortak.Entities.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.PriceList", "PriceList")
+                        .WithMany("Items")
+                        .HasForeignKey("PriceListId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("fatortak.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("PriceList");
 
                     b.Navigation("Tenant");
                 });
@@ -4201,6 +4378,13 @@ namespace fatortak.Migrations
             modelBuilder.Entity("fatortak.Entities.Payroll", b =>
                 {
                     b.Navigation("PayrollItems");
+                });
+
+            modelBuilder.Entity("fatortak.Entities.PriceList", b =>
+                {
+                    b.Navigation("Customers");
+
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("fatortak.Entities.Project", b =>
