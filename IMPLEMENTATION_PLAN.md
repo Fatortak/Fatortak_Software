@@ -240,7 +240,7 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
 - 2026-11-01: real SQL Server smoke tests passed for audit capture, bank statement import/match/ignore/adjustment/reconcile, price resolution, commission generate/approve/pay, stock adjustment valuation update, VAT return, e-invoice export and global search.
 - 2026-11-01: document revision history (`20261101123618_AddDocumentRevisions`) with automatic snapshots and change sets, API and history dialogs for invoices, quotations and purchase orders.
 - 2026-11-01: device/session management (`20261101130739_AddUserSessions`) with IP/user-agent history, current-device detection, revoke-one/revoke-others APIs, `/sessions` UI and middleware rejection of revoked sessions.
-- 2026-11-01: CSV import for customers/suppliers/items, per-user/shared saved views, and bulk customer/item delete/activate actions.
+- 2026-11-01: CSV import for customers/suppliers/items, per-user/shared saved views, bulk customer delete/activate actions and item bulk APIs.
 - 2026-11-01: onboarding checklist plus idempotent demo dataset (customers, suppliers, items, project and draft quotation).
 - 2026-11-01: stakeholder statement CSV export.
 - 2026-11-01: frontend Vitest + React Testing Library harness, 7 passing tests; CI now runs frontend tests, gitleaks, NuGet vulnerability audit and `npm audit --audit-level=high`.
