@@ -42,6 +42,7 @@ import {
   Calculator,
   Tag,
   Server,
+  ShieldCheck,
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -163,6 +164,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
       name: isRTL ? "الفواتير المتكررة" : "Recurring Invoices",
       icon: CalendarDays,
       path: "/recurring-invoices",
+    },
+    {
+      name: isRTL ? "قائمة الاعتماد" : "Approval Queue",
+      icon: ShieldCheck,
+      path: "/approvals",
     },
     {
       name: isRTL ? "عروض الأسعار" : "Quotations",

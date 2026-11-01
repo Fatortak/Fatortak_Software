@@ -18,6 +18,7 @@ export const useRoleAccess = () => {
     const roleString = user.role?.toLowerCase();
     switch (roleString) {
       case 'admin':
+      case 'sysadmin':
         return UserRole.Admin;
       case 'editor':
         return UserRole.Editor;

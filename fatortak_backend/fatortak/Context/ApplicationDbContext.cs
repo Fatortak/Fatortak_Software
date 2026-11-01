@@ -40,6 +40,8 @@ namespace fatortak.Context
         public DbSet<GoodsReceiptItem> GoodsReceiptItems { get; set; }
         public DbSet<RecurringInvoice> RecurringInvoices { get; set; }
         public DbSet<RecurringInvoiceItem> RecurringInvoiceItems { get; set; }
+        public DbSet<ApprovalRequest> ApprovalRequests { get; set; }
+        public DbSet<ApprovalPolicy> ApprovalPolicies { get; set; }
         public DbSet<Expenses> Expenses { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<Notification> Notifications { get; set; }

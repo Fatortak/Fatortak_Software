@@ -57,7 +57,7 @@ Last updated: 2026-10-27
 | P1-38 | Implement sales orders and convert quotations/sales orders into draft invoices | DONE | SO numbering, confirmed status, invoice conversion, no accounting or stock posting |
 | P1-39 | Implement purchase requisitions with draft/submitted/approved/rejected flow | DONE | PR numbering, line estimates, approval actions, tenant-scoped API and UI |
 | P1-40 | Implement delivery notes from confirmed sales orders | DONE | DN numbering, delivered status, details and print |
-| P1-41 | Add full approval flows across invoices, quotations, purchases and notes | TODO | Remaining commercial workflow |
+| P1-41 | Add full approval flows across invoices, quotations, purchases and notes | DONE | Approval queue, candidates per document type, thresholds, admin decisions, audit fields |
 | P1-42 | Implement RFQ, purchase orders and goods receipts with stock posting | DONE | RFQ quotes/award, PO receipt/close, GRN stock and weighted cost |
 | P1-43 | Implement supplier bill matching and credit/debit notes | DONE | PO/GRN bill creation with variance, note posting, ledger reversal and balance update |
 | P1-44 | Implement recurring invoices with scheduling and automatic generation | DONE | Frequency, start/end, auto-send, pause/resume, run-now and background generator |
@@ -65,8 +65,8 @@ Last updated: 2026-10-27
 | P1-18 | Stakeholder module: CRUD for stakeholders, linked chart-of-accounts account, ownership/type metadata | DONE | API + UI + migration |
 | P1-19 | Stakeholder transactions: capital contribution, dividend, loan, repayment, withdrawal; accounting postings | DONE | API + ledger postings |
 | P1-20 | Stakeholders page with list, create/edit modal, transaction history, balances | DONE | `tsc` + build |
-| P1-21 | Competitor parity gap analysis and missing pages (recurring invoices, bank reconciliation, audit trail, approval queue) | PARTIAL | Credit/debit notes, supplier bills and recurring invoices added; reconciliation/approvals still TODO |
-| P1-22 | Add the highest-value missing pages: recurring invoices and reconciliation workspace | TODO | Credit/debit notes page shipped |
+| P1-21 | Competitor parity gap analysis and missing pages (bank reconciliation, audit trail, multi-step approvals) | PARTIAL | Credit/debit notes, supplier bills, recurring invoices and approval queue added; reconciliation/audit feed still TODO |
+| P1-22 | Add the highest-value missing pages: reconciliation workspace and audit feed | TODO | Credit/debit notes, recurring invoices and approvals pages shipped |
 | P1-23 | Consistent design system: typography, spacing, colors, empty/loading/error states, table patterns, modals, RTL | PARTIAL | `.input`, stakeholder page, insights page |
 | P1-24 | Professional UI pass on dashboard, invoices, accounting, reports, settings, stakeholder pages | PARTIAL | New pages follow the new pattern |
 | P1-25 | Self-hosted deployment mode: no tenant/subscription limits, single installation tenant | DONE | `DeploymentMode`, middleware, quota bypass |
@@ -148,9 +148,10 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
   - currency, validity, quantity breaks, minimum price, approval for override.
 - [ ] **Sales commissions**
   - salesperson, rate, basis, payable after payment/collection, ledger posting.
-- [ ] **Approval workflows**
+- [x] **Approval workflows**
   - invoice, quotation, purchase order, expense, payment, discount and credit-note approvals;
   - thresholds, approver roles, audit trail, mobile approval.
+  - **Implemented:** generic approval queue for invoices, quotations, purchase orders, expenses, credit/debit notes and payments; policy thresholds and enable/disable per type; administrator-only decisions; requester/decision audit fields; responsive approval UI.
 - [ ] **Numbering and document versions**
   - separate sequences per document type; immutable issued documents; revision history.
 - [ ] **Customer/supplier portal**
@@ -161,7 +162,7 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
 - [x] Credit notes and debit notes with original-invoice linkage.
 - [x] Recurring invoices and scheduled sending.
 - [ ] Bank reconciliation workspace (import statement, match, adjust).
-- [ ] Approval workflows for invoices, expenses, payments.
+- [x] Approval workflows for invoices, expenses, payments.
 - [ ] Audit trail and activity feed.
 - [ ] Customer/supplier portal and payment links.
 - [ ] Inventory valuation and stock adjustments.
@@ -229,7 +230,7 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
 | Security | Move JWT from localStorage to HttpOnly cookies; add refresh-token rotation; add CSP at the Nginx layer; add 2FA/SSO |
 | Data isolation | Add EF Core global query filters as defense in depth; finish IDOR audit on every controller |
 | Accounting | Add automated journal-balance tests for every posting path; reconcile cheque lifecycle; payroll transaction guard |
-| Product | Bank reconciliation, approval queue, audit trail |
+| Product | Bank reconciliation, audit trail, multi-step approvals |
 | Self-hosted | Session/device history table, backup/upgrade status on the insights page |
 | UI | Full design-token pass and professional review of older pages; code splitting; mobile QA |
 | Quality | Backend test project, frontend tests, CI secret scan, dependency audit, load test |

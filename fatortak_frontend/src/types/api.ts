@@ -1416,3 +1416,52 @@ export interface RecurringInvoiceFilterDto {
   frequency?: string;
   customerId?: string;
 }
+
+// Approval workflow DTOs
+export interface ApprovalCandidateDto {
+  documentType: string;
+  documentId: string;
+  documentNumber: string;
+  partyName?: string;
+  amount: number;
+  date: string;
+}
+
+export interface ApprovalRequestDto {
+  id: string;
+  documentType: string;
+  documentId: string;
+  documentNumber: string;
+  amount: number;
+  notes?: string;
+  status: string;
+  requestedByName?: string;
+  requestedAt: string;
+  decidedByName?: string;
+  decidedAt?: string;
+  decisionNotes?: string;
+}
+
+export interface ApprovalRequestCreateDto {
+  documentType: string;
+  documentId: string;
+  notes?: string;
+}
+
+export interface ApprovalDecisionDto {
+  notes?: string;
+}
+
+export interface ApprovalRequestFilterDto {
+  search?: string;
+  status?: string;
+  documentType?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
+export interface ApprovalPolicyDto {
+  documentType: string;
+  thresholdAmount: number;
+  isEnabled: boolean;
+}

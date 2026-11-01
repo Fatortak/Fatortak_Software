@@ -31,6 +31,7 @@ Shipped in the current rollout:
 - Supplier bill matching: bills from posted receipts, purchase-order linkage and price-variance flags.
 - Credit/debit notes: linked invoice, line-level tax, posting reversal and adjusted balances.
 - Recurring invoices: schedules, frequency, pause/resume, run-now and automatic generation.
+- Approval queue: document candidates, thresholds, admin decisions and audit fields.
 - Delivery notes: generated from confirmed sales orders, listed separately with details and print.
 
 Still to do:
@@ -38,8 +39,8 @@ Still to do:
 - Public invoice and print templates: final production logo/large-list spot check and cross-browser PDF check.
 - A full accessibility audit: screen-reader certification and automated axe checks.
 - Storybook/visual regression for the shared primitives.
-- The remaining commercial workflow: full approval flows.
-- RFQs, purchase orders, goods receipts, supplier bill matching, credit/debit notes, recurring invoices, quotations, sales orders, purchase requisitions and delivery notes are implemented end to end.
+- Bank reconciliation workspace, audit activity feed and multi-step approval chains.
+- RFQs, purchase orders, goods receipts, supplier bill matching, credit/debit notes, recurring invoices, approvals, quotations, sales orders, purchase requisitions and delivery notes are implemented end to end.
 
 ---
 
