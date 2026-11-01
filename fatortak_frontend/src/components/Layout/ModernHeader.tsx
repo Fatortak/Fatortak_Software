@@ -132,6 +132,17 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({
             >
               <Menu className="w-5 h-5" />
             </button>
+            <button
+              onClick={() => window.dispatchEvent(new Event("open-command-palette"))}
+              className="hidden items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-900 sm:flex dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-white"
+              aria-label={isRTL ? "البحث الشامل" : "Global search"}
+            >
+              <Search className="h-4 w-4" />
+              <span>{isRTL ? "بحث..." : "Search..."}</span>
+              <kbd className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-400 dark:border-slate-700 dark:bg-slate-800">
+                Ctrl K
+              </kbd>
+            </button>
           </div>
 
           {/* Center Section - Logo for mobile */}

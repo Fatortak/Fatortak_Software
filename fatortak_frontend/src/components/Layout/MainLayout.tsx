@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import ModernSidebar from "./ModernSidebar";
 import ModernHeader from "./ModernHeader";
+import CommandPalette from "./CommandPalette";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 const MainLayout: React.FC = () => {
@@ -159,6 +160,7 @@ const MainLayout: React.FC = () => {
           </div>
         </main>
       </div>
+      <CommandPalette />
     </div>
   );
 };

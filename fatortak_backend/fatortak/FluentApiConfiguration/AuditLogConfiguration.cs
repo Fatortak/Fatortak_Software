@@ -14,7 +14,6 @@ namespace fatortak.FluentApiConfiguration
             builder.Property(a => a.EntityType).HasMaxLength(100).IsRequired();
             builder.Property(a => a.EntityId).HasMaxLength(100).IsRequired();
             builder.Property(a => a.EntityLabel).HasMaxLength(300);
-            builder.Property(a => a.Changes).HasColumnType("nvarchar(max)");
             builder.Property(a => a.IpAddress).HasMaxLength(64);
             builder.HasIndex(a => new { a.TenantId, a.CreatedAt });
             builder.HasIndex(a => new { a.TenantId, a.EntityType, a.EntityId });
