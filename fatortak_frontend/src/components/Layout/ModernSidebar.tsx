@@ -177,6 +177,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
       path: "/activity",
     },
     {
+      name: isRTL ? "مطابقة البنك" : "Bank Reconciliation",
+      icon: Landmark,
+      path: "/bank-reconciliation",
+    },
+    {
       name: isRTL ? "عروض الأسعار" : "Quotations",
       icon: ClipboardList,
       path: "/quotations",

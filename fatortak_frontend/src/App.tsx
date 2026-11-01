@@ -16,6 +16,7 @@ import CreditDebitNotes from "./pages/CreditDebitNotes";
 import RecurringInvoices from "./pages/RecurringInvoices";
 import Approvals from "./pages/Approvals";
 import ActivityLog from "./pages/ActivityLog";
+import BankReconciliation from "./pages/BankReconciliation";
 import SalesOrders from "./pages/SalesOrders";
 import PurchaseRequisitions from "./pages/PurchaseRequisitions";
 import RequestForQuotations from "./pages/RequestForQuotations";
@@ -152,6 +153,7 @@ function AppContent() {
           <Route path="recurring-invoices" element={<RecurringInvoices />} />
           <Route path="approvals" element={<Approvals />} />
           <Route path="activity" element={<ActivityLog />} />
+          <Route path="bank-reconciliation" element={<BankReconciliation />} />
           <Route path="quotations" element={<Quotations />} />
           <Route path="sales-orders" element={<SalesOrders />} />
           <Route path="purchase-requisitions" element={<PurchaseRequisitions />} />

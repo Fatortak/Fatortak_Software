@@ -1487,3 +1487,69 @@ export interface AuditLogFilterDto {
   fromDate?: string;
   toDate?: string;
 }
+
+// Bank reconciliation DTOs
+export interface BankStatementLineDto {
+  id: string;
+  date: string;
+  description: string;
+  reference?: string;
+  debit: number;
+  credit: number;
+  status: string;
+  matchedTransactionId?: string;
+  matchedAt?: string;
+  notes?: string;
+}
+
+export interface BankStatementDto {
+  id: string;
+  accountId: string;
+  accountName: string;
+  name: string;
+  fileName?: string;
+  periodStart: string;
+  periodEnd: string;
+  openingBalance: number;
+  closingBalance: number;
+  status: string;
+  importedAt: string;
+  importedByName?: string;
+  notes?: string;
+  lineCount: number;
+  matchedCount: number;
+  unmatchedCount: number;
+  totalDebit: number;
+  totalCredit: number;
+  statementDifference: number;
+  lines: BankStatementLineDto[];
+}
+
+export interface BankStatementImportDto {
+  accountId: string;
+  name: string;
+  fileName?: string;
+  periodStart: string;
+  periodEnd: string;
+  openingBalance: number;
+  closingBalance: number;
+  notes?: string;
+  csv?: string;
+}
+
+export interface BankStatementFilterDto {
+  search?: string;
+  accountId?: string;
+  status?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
+export interface BankTransactionCandidateDto {
+  id: string;
+  date: string;
+  description?: string;
+  amount: number;
+  direction: string;
+  type?: string;
+}
