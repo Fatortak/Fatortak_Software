@@ -45,6 +45,7 @@ import {
   ShieldCheck,
   MonitorSmartphone,
   Upload,
+  Rocket,
   History,
   BadgePercent,
 } from "lucide-react";
@@ -399,6 +400,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
         },
       ],
     },
+    { name: isRTL ? "البداية" : "Getting Started", icon: Rocket, path: "/onboarding" },
     { name: t("team") || "Team", icon: UserCheck, path: "/team" },
     { name: isRTL ? "الجلسات والأجهزة" : "Sessions & Devices", icon: MonitorSmartphone, path: "/sessions" },
     { name: isRTL ? "استيراد البيانات" : "Data Import", icon: Upload, path: "/data-import" },

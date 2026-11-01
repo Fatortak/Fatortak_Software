@@ -84,6 +84,7 @@ import JournalEntries from "./pages/JournalEntries";
 import Stakeholders from "./pages/Stakeholders";
 import InstallationInsights from "./pages/InstallationInsights";
 import Sessions from "./pages/Sessions";
+import Onboarding from "./pages/Onboarding";
 import DataImport from "./pages/DataImport";
 import InvoiceTemplatesHub from "./pages/InvoiceTemplate/InvoiceTemplatesHub";
 
@@ -210,6 +211,7 @@ function AppContent() {
 
           <Route path="team" element={<Team />} />
           <Route path="sessions" element={<Sessions />} />
+          <Route path="onboarding" element={<Onboarding />} />
           <Route path="data-import" element={<DataImport />} />
           <Route path="settings" element={<Settings />} />
           <Route path="installation" element={<InstallationInsights />} />

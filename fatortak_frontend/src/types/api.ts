@@ -1840,3 +1840,29 @@ export interface BulkActionResultDto {
   affected: number;
   missing: number;
 }
+
+// Onboarding DTOs
+export interface OnboardingStepDto {
+  key: string;
+  title: string;
+  description: string;
+  route: string;
+  completed: boolean;
+}
+
+export interface OnboardingProgressDto {
+  percent: number;
+  completed: number;
+  total: number;
+  demoDataLoaded: boolean;
+  steps: OnboardingStepDto[];
+}
+
+export interface DemoDataResultDto {
+  alreadyLoaded: boolean;
+  customers: number;
+  items: number;
+  projects: number;
+  quotations: number;
+  message: string;
+}
