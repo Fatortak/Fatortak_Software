@@ -81,17 +81,3 @@ jobs:
       - name: npm vulnerability audit
         working-directory: fatortak_frontend
         run: npm audit --audit-level=high
-
-  marketing:
-    name: Marketing assets
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: marketing/automation
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "20"
-      - name: Validate content queue
-        run: node src/cli.mjs validate

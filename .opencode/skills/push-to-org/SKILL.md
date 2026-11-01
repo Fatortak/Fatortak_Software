@@ -59,7 +59,7 @@ in new content.
 
 6. Open a pull request against `main`. Explain what changed, why, and how it was
    verified. Wait for all required checks: `Backend (.NET 8)`,
-   `Frontend (React + Vite)` and `Marketing assets`.
+   `Frontend (React + Vite)`. Wait for all required checks.
 
 7. Merges are **squash-only**; merge commits and rebase merges are disabled at
    the repository level. Branches are deleted automatically after merge.
@@ -119,12 +119,12 @@ git bundle create ../fatortak-backup.bundle --all
 
 After either, update the remote, verify `git ls-remote --heads --tags origin`,
 open a test issue, confirm Actions runs, and update links in `README.md`,
-`CONTRIBUTING.md`, `docs/`, `marketing/` and badges.
+`CONTRIBUTING.md`, `docs/` and badges.
 
 ## Repository settings to preserve
 
 - Default branch: `main`
-- Required checks: `Backend (.NET 8)`, `Frontend (React + Vite)`, `Marketing assets`
+- Required checks: `Backend (.NET 8)`, `Frontend (React + Vite)`
 - Squash merges only; branch auto-delete on merge
 - Force pushes and branch deletion disabled on `main`
 - Secret scanning, push protection, Dependabot alerts and security updates enabled

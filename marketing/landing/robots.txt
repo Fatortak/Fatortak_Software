@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://fatortak.github.io/Fatortak_Software/sitemap.xml
