@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace fatortak.Context
 {
@@ -42,6 +43,7 @@ namespace fatortak.Context
         public DbSet<RecurringInvoiceItem> RecurringInvoiceItems { get; set; }
         public DbSet<ApprovalRequest> ApprovalRequests { get; set; }
         public DbSet<ApprovalPolicy> ApprovalPolicies { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Expenses> Expenses { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<Notification> Notifications { get; set; }
@@ -217,6 +219,7 @@ namespace fatortak.Context
         public override int SaveChanges()
         {
             SetTenantIds();
+            AddAuditLogs();
             return base.SaveChanges();
         }
 
@@ -224,8 +227,116 @@ namespace fatortak.Context
             CancellationToken cancellationToken = default)
         {
             SetTenantIds();
+            AddAuditLogs();
             return await base.SaveChangesAsync(cancellationToken);
         }
+
+        private static readonly HashSet<Type> AuditedTypes = new()
+        {
+            typeof(Invoice), typeof(Quotation), typeof(PurchaseOrder), typeof(GoodsReceiptNote),
+            typeof(PurchaseRequisition), typeof(RequestForQuotation), typeof(RecurringInvoice),
+            typeof(ApprovalRequest), typeof(Customer), typeof(Item), typeof(Expenses),
+            typeof(Transaction), typeof(JournalEntry), typeof(Payroll), typeof(Employee),
+            typeof(Stakeholder), typeof(Account), typeof(Company)
+        };
+
+        private static readonly HashSet<string> SkippedProperties = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "PasswordHash", "SecurityStamp", "ConcurrencyStamp", "TenantId",
+            "CreatedAt", "UpdatedAt"
+        };
+
+        private void AddAuditLogs()
+        {
+            var http = _httpContextAccessor.HttpContext;
+            Guid? userId = Guid.TryParse(http?.User?.FindFirst("UserId")?.Value, out var parsedUser)
+                ? parsedUser
+                : null;
+            var ip = http?.Connection?.RemoteIpAddress?.ToString();
+
+            var logs = new List<AuditLog>();
+            foreach (var entry in ChangeTracker.Entries()
+                .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+                .Where(e => AuditedTypes.Contains(e.Entity.GetType())))
+            {
+                var tenantId = (entry.Entity as ITenantEntity)?.TenantId ?? GetCurrentTenantId();
+                if (tenantId == Guid.Empty) continue;
+
+                var changes = BuildChangeSet(entry);
+                if (entry.State == EntityState.Modified && string.IsNullOrEmpty(changes)) continue;
+
+                var id = entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey())
+                    ?.CurrentValue?.ToString() ?? string.Empty;
+
+                logs.Add(new AuditLog
+                {
+                    TenantId = tenantId,
+                    UserId = userId,
+                    Action = entry.State.ToString(),
+                    EntityType = entry.Entity.GetType().Name,
+                    EntityId = id,
+                    EntityLabel = BuildEntityLabel(entry.Entity),
+                    Changes = changes,
+                    IpAddress = ip
+                });
+            }
+
+            if (logs.Count > 0)
+                AuditLogs.AddRange(logs);
+        }
+
+        private static string? BuildChangeSet(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry)
+        {
+            var values = new Dictionary<string, object?>();
+            foreach (var property in entry.Properties)
+            {
+                if (property.Metadata.IsPrimaryKey() ||
+                    property.Metadata.IsForeignKey() && property.Metadata.Name.EndsWith("Id") && property.Metadata.Name == "TenantId" ||
+                    SkippedProperties.Contains(property.Metadata.Name))
+                    continue;
+
+                var value = entry.State == EntityState.Deleted
+                    ? property.OriginalValue
+                    : property.CurrentValue;
+                if (entry.State == EntityState.Modified && Equals(property.OriginalValue, value))
+                    continue;
+
+                if (value is null) continue;
+                var type = value.GetType();
+                if (!(type.IsPrimitive || type.IsEnum || value is string || value is Guid ||
+                      value is DateTime || value is DateTimeOffset || value is decimal || value is DateOnly))
+                    continue;
+
+                values[property.Metadata.Name] = entry.State == EntityState.Modified
+                    ? new { from = property.OriginalValue, to = value }
+                    : value;
+            }
+
+            return values.Count == 0 ? null : JsonSerializer.Serialize(values);
+        }
+
+        private static string? BuildEntityLabel(object entity) => entity switch
+        {
+            Invoice invoice => invoice.InvoiceNumber,
+            Quotation quotation => quotation.QuotationNumber,
+            PurchaseOrder order => order.PoNumber,
+            GoodsReceiptNote receipt => receipt.GrnNumber,
+            PurchaseRequisition requisition => requisition.RequestNumber,
+            RequestForQuotation rfq => rfq.RfqNumber,
+            RecurringInvoice recurring => recurring.RecurringNumber,
+            ApprovalRequest approval => approval.DocumentNumber,
+            Customer customer => customer.Name,
+            Item item => item.Name,
+            Account account => $"{account.AccountCode} - {account.Name}",
+            JournalEntry journal => journal.EntryNumber,
+            Transaction transaction => transaction.Description,
+            Expenses expense => expense.Notes ?? $"EXP-{expense.Id}",
+            Payroll payroll => $"Payroll {payroll.Month}/{payroll.Year}",
+            Employee employee => employee.FullName,
+            Stakeholder stakeholder => stakeholder.Name,
+            Company company => company.Name,
+            _ => entity.GetType().Name
+        };
 
         private void SetTenantIds()
         {

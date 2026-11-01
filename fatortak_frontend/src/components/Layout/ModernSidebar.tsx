@@ -43,6 +43,7 @@ import {
   Tag,
   Server,
   ShieldCheck,
+  History,
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -169,6 +170,11 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
       name: isRTL ? "قائمة الاعتماد" : "Approval Queue",
       icon: ShieldCheck,
       path: "/approvals",
+    },
+    {
+      name: isRTL ? "سجل النشاط" : "Activity Log",
+      icon: History,
+      path: "/activity",
     },
     {
       name: isRTL ? "عروض الأسعار" : "Quotations",

@@ -1465,3 +1465,25 @@ export interface ApprovalPolicyDto {
   thresholdAmount: number;
   isEnabled: boolean;
 }
+
+// Audit trail DTOs
+export interface AuditLogDto {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  entityLabel?: string;
+  changes?: string;
+  userName?: string;
+  ipAddress?: string;
+  createdAt: string;
+}
+
+export interface AuditLogFilterDto {
+  search?: string;
+  entityType?: string;
+  action?: string;
+  userId?: string;
+  fromDate?: string;
+  toDate?: string;
+}
