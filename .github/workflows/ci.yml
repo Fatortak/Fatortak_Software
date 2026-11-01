@@ -48,10 +48,39 @@ jobs:
         run: npx tsc -p tsconfig.app.json --noEmit
       - name: Lint
         run: npm run lint
+      - name: Test
+        run: npm test
       - name: Build
         run: npm run build
         env:
           VITE_API_URL: http://localhost:5000
+
+  security:
+    name: Security and dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Secret scan (gitleaks)
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:latest \
+            detect --source=/repo --no-git --redact --exit-code 1 --no-banner
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "8.0.x"
+      - name: NuGet vulnerability audit
+        run: |
+          output=$(dotnet list fatortak_backend/fatortak.sln package --vulnerable --include-transitive 2>&1)
+          echo "$output"
+          if echo "$output" | grep -q "has the following vulnerable packages"; then
+            echo "Vulnerable NuGet packages detected."
+            exit 1
+          fi
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+      - name: npm vulnerability audit
+        working-directory: fatortak_frontend
+        run: npm audit --audit-level=high
 
   marketing:
     name: Marketing assets
