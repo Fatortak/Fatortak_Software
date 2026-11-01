@@ -3,7 +3,7 @@
 **Status:** In implementation — foundation and core modules shipped  
 **Scope:** Visual system, interaction patterns, page templates, accessibility and rollout  
 **Constraint:** Keep Fatortak’s identity and brand recognition. Move from heavy gradients and saturated blues/purples to a calmer, lighter, more professional product UI.  
-**Implementation:** Shared tokens and primitives are live. Shell, dashboard, lists, forms, reports and settings are migrated. Specialist pages, public/print surfaces, accessibility QA and the quotation workspace remain.
+**Implementation:** Shared tokens and primitives are live. Shell, dashboard, lists, forms, reports, settings and the full commercial document chain are migrated. Remaining work is accessibility/visual QA, public/print spot checks, Storybook and a few specialist operations pages.
 
 ---
 
@@ -33,14 +33,23 @@ Shipped in the current rollout:
 - Recurring invoices: schedules, frequency, pause/resume, run-now and automatic generation.
 - Approval queue: document candidates, thresholds, admin decisions and audit fields.
 - Delivery notes: generated from confirmed sales orders, listed separately with details and print.
+- Audit trail: `/activity` feed with filters, statistics, change details and IP/user attribution.
+- Bank reconciliation: CSV import, candidate matching, ignore, adjustment transactions and statement closing at `/bank-reconciliation`.
+- Price lists: default/customer-assigned lists, quantity breaks, customer assignment and resolved quotation pricing at `/price-lists`.
+- Sales commissions: rules, generation, approval, payment, ledger posting and `/commissions`.
+- Inventory valuation: cost valuation, low-stock flags, stock adjustments and weighted average cost at `/inventory`.
+- Tax reporting: VAT return summary, line-level detail and JSON e-invoice export at `/tax-reports`.
+- Global search: Ctrl/Cmd+K command palette and `/api/search` across customers, suppliers, items, invoices, quotations, purchase orders and projects.
 
 Still to do:
 
 - Public invoice and print templates: final production logo/large-list spot check and cross-browser PDF check.
 - A full accessibility audit: screen-reader certification and automated axe checks.
 - Storybook/visual regression for the shared primitives.
-- Bank reconciliation workspace, audit activity feed and multi-step approval chains.
-- RFQs, purchase orders, goods receipts, supplier bill matching, credit/debit notes, recurring invoices, approvals, quotations, sales orders, purchase requisitions and delivery notes are implemented end to end.
+- Multi-step approval chains (single-step administrator approval is live).
+- Customer/supplier portal and payment links (separate portal repositories).
+- Document revision history, saved views/bulk actions/CSV import, role/permission matrix editor and demo dataset.
+- Frontend automated tests and mobile QA.
 
 ---
 
@@ -718,4 +727,4 @@ Build/standardize in `src/components/ui`:
 - No page uses a one-off gradient, button, table or modal unless documented.
 - Dashboard, invoice, report and settings task completion improves in usability testing.
 
-Implementation status: foundation and core rollout are in place; the remaining specialist pages, accessibility pass and quotation workspace are tracked in section 0 and in `IMPLEMENTATION_PLAN.md`.
+Implementation status: foundation and core rollout are in place, including the full quote-to-cash and procure-to-pay document chains, audit, reconciliation, pricing, commissions, inventory, tax and global search. Remaining work is tracked in section 0 and in `IMPLEMENTATION_PLAN.md`.

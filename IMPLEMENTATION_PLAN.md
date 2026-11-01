@@ -2,7 +2,7 @@
 
 Status legend: `DONE` implemented and verified; `IN PROGRESS` being changed; `TODO` planned; `DEFERRED` requires product decision or external service.
 
-Last updated: 2026-10-27
+Last updated: 2026-11-01
 
 ## P0 — release blockers
 
@@ -144,10 +144,12 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
 - [x] **Recurring invoices / subscriptions**
   - schedule, frequency, start/end, auto-send, retry, pause/resume.
   - **Implemented:** `REC-` schedules with weekly/monthly/quarterly/yearly cadence, end dates, due days, auto-send drafts, pause/resume, run-now and a background generator that catches up missed runs.
-- [ ] **Price lists and customer-specific pricing**
+- [x] **Price lists and customer-specific pricing**
   - currency, validity, quantity breaks, minimum price, approval for override.
-- [ ] **Sales commissions**
+  - **Implemented:** default and customer-assigned price lists with validity windows, per-item quantity breaks, customer assignment, and a resolve API used by quotation item selection. Minimum-price enforcement and override approval remain open.
+- [x] **Sales commissions**
   - salesperson, rate, basis, payable after payment/collection, ledger posting.
+  - **Implemented:** per-salesperson or global rules with collected/invoiced basis, generation from sales invoices, pending/approved/paid/cancelled workflow, administrator approval, and payment posting to `6100 Commission Expense` / `2300 Commission Payable`.
 - [x] **Approval workflows**
   - invoice, quotation, purchase order, expense, payment, discount and credit-note approvals;
   - thresholds, approver roles, audit trail, mobile approval.
@@ -161,17 +163,20 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
 
 - [x] Credit notes and debit notes with original-invoice linkage.
 - [x] Recurring invoices and scheduled sending.
-- [ ] Bank reconciliation workspace (import statement, match, adjust).
+- [x] Bank reconciliation workspace (import statement, match, adjust).
 - [x] Approval workflows for invoices, expenses, payments.
-- [ ] Audit trail and activity feed.
+- [x] Audit trail and activity feed.
 - [ ] Customer/supplier portal and payment links.
-- [ ] Inventory valuation and stock adjustments.
-- [ ] VAT return pack and e-invoicing export.
+- [x] Inventory valuation and stock adjustments.
+- [x] VAT return pack and e-invoicing export.
 - [ ] Multi-currency and exchange-rate revaluation.
 - [ ] Saved views, bulk actions, and CSV import.
-- [ ] Global search and command palette.
+- [x] Global search and command palette.
 - [ ] Role/permission matrix editor.
 - [ ] Onboarding checklist and demo dataset.
+- [ ] Document revision history and immutable issued documents.
+- [ ] Stakeholder statement export.
+- [ ] Real Egypt ETA / Saudi ZATCA e-invoice integration.
 
 ### Self-hosted mode
 
@@ -222,18 +227,28 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
 - Dependency review completed: ESLint 10.13, Recharts 3.10 + react-is 19.3, TypeScript 6.0, iText 9.8 + pdfCalligraph 5.1, EPPlus 8.7 with explicit license configuration, Vite 8.3 + plugin 4.3, react-day-picker 10 and react-resizable-panels 4.
 - `npm ci` completes successfully; `eslint .` reports 0 errors (31 legacy warnings); `tsc` 0 errors; production build passes.
 - All 10 open Dependabot PRs were reviewed and closed with a comment: implemented on main, or deferred because TypeScript 7 is not supported by typescript-eslint and dotnet-ef 10 requires a .NET 10 migration.
+- 2026-11-01: audit trail (`20261101105706_AddAuditLogs`) with central change capture, sensitive-field exclusion, `/api/audit` and `/activity`.
+- 2026-11-01: bank reconciliation (`20261101111218_AddBankReconciliation`) with CSV import, candidate matching, unmatch, ignore, adjustment transactions, statement closing and `/bank-reconciliation`.
+- 2026-11-01: price lists (`20261101112445_AddPriceLists`) with default/customer lists, quantity breaks, customer assignment, `/api/pricelists/resolve` and `/price-lists`; quotation item selection uses resolved pricing.
+- 2026-11-01: sales commissions (`20261101113948_AddSalesCommissions`) with collected/invoiced basis, approval/payment workflow, ledger posting and `/commissions`.
+- 2026-11-01: inventory valuation and stock adjustments (`20261101115413_AddStockAdjustments`) with weighted-average cost updates and `/inventory`.
+- 2026-11-01: VAT return and generic JSON e-invoice export (`/api/tax/vat-return`, `/api/tax/e-invoices`, `/tax-reports`); provider-specific ETA/ZATCA submission remains open.
+- 2026-11-01: global search (`/api/search`) and Ctrl/Cmd+K command palette across customers, suppliers, items, invoices, quotations, purchase orders and projects.
+- 2026-11-01: backend build succeeds; `dotnet test` 10/10; `npm run build` succeeds; targeted ESLint passes; SQLite test compatibility fixed by removing the SQL Server-only `nvarchar(max)` audit column annotation.
+- 2026-11-01: real SQL Server smoke tests passed for audit capture, bank statement import/match/ignore/adjustment/reconcile, price resolution, commission generate/approve/pay, stock adjustment valuation update, VAT return, e-invoice export and global search.
 
 ## Remaining work (next commits)
 
 | Area | Remaining |
 |---|---|
-| Security | Move JWT from localStorage to HttpOnly cookies; add refresh-token rotation; add CSP at the Nginx layer; add 2FA/SSO |
+| Security | Refresh-token rotation; CSP at the Nginx layer; 2FA/SSO; session/device management; PII retention review |
 | Data isolation | Add EF Core global query filters as defense in depth; finish IDOR audit on every controller |
 | Accounting | Add automated journal-balance tests for every posting path; reconcile cheque lifecycle; payroll transaction guard |
-| Product | Bank reconciliation, audit trail, multi-step approvals |
-| Self-hosted | Session/device history table, backup/upgrade status on the insights page |
+| Commercial | Customer/supplier portal and payment links (separate portal repos); document revision history; saved views, bulk actions and CSV import; role/permission matrix editor; onboarding checklist and demo dataset; multi-currency and revaluation; stakeholder statement export |
+| Tax | Real Egypt ETA / Saudi ZATCA submission adapters and credentials |
+| Self-hosted | Session/device history table; backup and upgrade status on the insights page |
 | UI | Full design-token pass and professional review of older pages; code splitting; mobile QA |
-| Quality | Backend test project, frontend tests, CI secret scan, dependency audit, load test |
+| Quality | Frontend tests; CI secret scan; dependency audit; load test |
 | Marketing | Uncommitted `marketing/` changes are intentionally excluded until reviewed and scanned separately |
 
 ## Guardrails
