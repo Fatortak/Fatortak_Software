@@ -44,6 +44,7 @@ namespace fatortak.Context
         public DbSet<ApprovalRequest> ApprovalRequests { get; set; }
         public DbSet<ApprovalPolicy> ApprovalPolicies { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<DocumentRevision> DocumentRevisions { get; set; }
         public DbSet<BankStatement> BankStatements { get; set; }
         public DbSet<BankStatementLine> BankStatementLines { get; set; }
         public DbSet<PriceList> PriceLists { get; set; }
@@ -248,6 +249,12 @@ namespace fatortak.Context
             typeof(Stakeholder), typeof(Account), typeof(Company)
         };
 
+        private static readonly HashSet<Type> RevisedTypes = new()
+        {
+            typeof(Invoice), typeof(Quotation), typeof(PurchaseOrder), typeof(GoodsReceiptNote),
+            typeof(PurchaseRequisition), typeof(RequestForQuotation), typeof(RecurringInvoice)
+        };
+
         private static readonly HashSet<string> SkippedProperties = new(StringComparer.OrdinalIgnoreCase)
         {
             "PasswordHash", "SecurityStamp", "ConcurrencyStamp", "TenantId",
@@ -263,6 +270,7 @@ namespace fatortak.Context
             var ip = http?.Connection?.RemoteIpAddress?.ToString();
 
             var logs = new List<AuditLog>();
+            var revisions = new List<DocumentRevision>();
             foreach (var entry in ChangeTracker.Entries()
                 .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
                 .Where(e => AuditedTypes.Contains(e.Entity.GetType())))
@@ -287,10 +295,58 @@ namespace fatortak.Context
                     Changes = changes,
                     IpAddress = ip
                 });
+
+                if (RevisedTypes.Contains(entry.Entity.GetType()) && Guid.TryParse(id, out var documentId))
+                {
+                    var revision = DocumentRevisions.Count(r =>
+                        r.TenantId == tenantId &&
+                        r.DocumentType == entry.Entity.GetType().Name &&
+                        r.DocumentId == documentId) + 1;
+
+                    revisions.Add(new DocumentRevision
+                    {
+                        TenantId = tenantId,
+                        DocumentType = entry.Entity.GetType().Name,
+                        DocumentId = documentId,
+                        DocumentNumber = BuildEntityLabel(entry.Entity) ?? id,
+                        Revision = revision,
+                        Action = entry.State.ToString(),
+                        Changes = changes,
+                        Snapshot = BuildDocumentSnapshot(entry),
+                        UserId = userId
+                    });
+                }
             }
 
             if (logs.Count > 0)
                 AuditLogs.AddRange(logs);
+            if (revisions.Count > 0)
+                DocumentRevisions.AddRange(revisions);
+        }
+
+        private static string BuildDocumentSnapshot(
+            Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry)
+        {
+            var values = new Dictionary<string, object?>();
+            foreach (var property in entry.Properties)
+            {
+                if (property.Metadata.IsForeignKey() && property.Metadata.Name == "TenantId")
+                    continue;
+
+                var value = entry.State == EntityState.Deleted
+                    ? property.OriginalValue
+                    : property.CurrentValue;
+                if (value is null) continue;
+
+                var type = value.GetType();
+                if (!(type.IsPrimitive || type.IsEnum || value is string || value is Guid ||
+                      value is DateTime || value is DateTimeOffset || value is decimal || value is DateOnly))
+                    continue;
+
+                values[property.Metadata.Name] = value;
+            }
+
+            return JsonSerializer.Serialize(values);
         }
 
         private static string? BuildChangeSet(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry)

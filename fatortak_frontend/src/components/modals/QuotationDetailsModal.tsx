@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Building2,
   CalendarDays,
   FileText,
+  History,
   Printer,
   User,
 } from "lucide-react";
@@ -23,6 +24,7 @@ import { useCurrentCompany } from "@/hooks/useCompanies";
 import { useConvertQuotation } from "@/hooks/useQuotations";
 import { formatCurrency } from "@/Helpers/formatCurrency";
 import type { QuotationDto } from "@/types/api";
+import DocumentHistoryDialog from "./DocumentHistoryDialog";
 
 interface QuotationDetailsModalProps {
   isOpen: boolean;
@@ -61,6 +63,7 @@ const QuotationDetailsModal: React.FC<QuotationDetailsModalProps> = ({
 }) => {
   const { isRTL, t } = useLanguage();
   const navigate = useNavigate();
+  const [historyOpen, setHistoryOpen] = useState(false);
   const { data: companyResponse } = useCurrentCompany();
   const convertMutation = useConvertQuotation();
   const company = companyResponse?.data;
@@ -267,6 +270,10 @@ const QuotationDetailsModal: React.FC<QuotationDetailsModalProps> = ({
           <Button variant="outline" onClick={onClose}>
             {t("close") || "Close"}
           </Button>
+          <Button variant="outline" onClick={() => setHistoryOpen(true)}>
+            <History className="h-4 w-4" />
+            {isRTL ? "الإصدارات" : "History"}
+          </Button>
           <Button variant="outline" onClick={() => window.print()}>
             <Printer className="h-4 w-4" />
             {isRTL ? "طباعة" : "Print"}
@@ -279,6 +286,13 @@ const QuotationDetailsModal: React.FC<QuotationDetailsModalProps> = ({
           )}
         </DialogFooter>
       </DialogContent>
+      <DocumentHistoryDialog
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        documentType="Quotation"
+        documentId={quotation.id}
+        documentNumber={quotation.quotationNumber}
+      />
     </Dialog>
   );
 };

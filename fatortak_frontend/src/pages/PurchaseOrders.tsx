@@ -3,6 +3,7 @@ import {
   CheckCircle2,
   Eye,
   FileCheck2,
+  History,
   PackageCheck,
   PackagePlus,
   Plus,
@@ -49,6 +50,7 @@ import {
   useUpdatePurchaseOrderStatus,
 } from "@/hooks/usePurchaseOrders";
 import PurchaseOrderModal from "@/components/modals/PurchaseOrderModal";
+import DocumentHistoryDialog from "@/components/modals/DocumentHistoryDialog";
 import GoodsReceiptModal from "@/components/modals/GoodsReceiptModal";
 import SupplierBillModal from "@/components/modals/SupplierBillModal";
 import { formatCurrency } from "@/Helpers/formatCurrency";
@@ -79,6 +81,7 @@ const PurchaseOrders: React.FC = () => {
   const [pagination, setPagination] = useState({ pageNumber: 1, pageSize: 10 });
   const [showForm, setShowForm] = useState(false);
   const [details, setDetails] = useState<PurchaseOrderDto | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [receiving, setReceiving] = useState<PurchaseOrderDto | null>(null);
   const [billing, setBilling] = useState<PurchaseOrderDto | null>(null);
 
@@ -379,6 +382,7 @@ const PurchaseOrders: React.FC = () => {
           )}
           <DialogFooter className="flex-wrap">
             <Button variant="outline" onClick={() => setDetails(null)}>{isRTL ? "إغلاق" : "Close"}</Button>
+            <Button variant="outline" onClick={() => setHistoryOpen(true)}><History className="h-4 w-4" />{isRTL ? "الإصدارات" : "History"}</Button>
             {roleAccess.canEdit() && details?.status === "Draft" && <Button onClick={() => changeStatus(details!, "Ordered")}><Send className="h-4 w-4" />{isRTL ? "إرسال للمورد" : "Send to supplier"}</Button>}
             {roleAccess.canEdit() && details && ["Ordered", "PartiallyReceived"].includes(details.status) && <Button onClick={() => { setReceiving(details); setDetails(null); }}><PackageCheck className="h-4 w-4" />{isRTL ? "استلام بضاعة" : "Receive goods"}</Button>}
             {roleAccess.canEdit() && details && ["Ordered", "PartiallyReceived", "Received"].includes(details.status) && <Button variant="outline" onClick={() => changeStatus(details!, "Closed")}>{isRTL ? "إغلاق الأمر" : "Close order"}</Button>}
@@ -386,6 +390,13 @@ const PurchaseOrders: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <DocumentHistoryDialog
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        documentType="PurchaseOrder"
+        documentId={details?.id}
+        documentNumber={details?.poNumber}
+      />
     </div>
   );
 };

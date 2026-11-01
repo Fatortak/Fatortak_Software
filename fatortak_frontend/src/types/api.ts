@@ -1771,3 +1771,17 @@ export interface GlobalSearchResultDto {
   subtitle?: string;
   route: string;
 }
+
+// Document revision DTOs
+export interface DocumentRevisionDto {
+  id: string;
+  documentType: string;
+  documentId: string;
+  documentNumber: string;
+  revision: number;
+  action: string;
+  changes?: string;
+  snapshot?: string;
+  userName?: string;
+  createdAt: string;
+}

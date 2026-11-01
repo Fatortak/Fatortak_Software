@@ -15,6 +15,7 @@ import {
   AlertCircle,
   Paperclip,
   Eye,
+  History,
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useCurrentCompany } from "../../hooks/useCompanies";
@@ -24,6 +25,7 @@ import { invoiceTemplates } from "../invoice-templates";
 import { exportService } from "@/services/exportService";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import DocumentHistoryDialog from "./DocumentHistoryDialog";
 
 const formatDate = (value?: string | Date | null) => {
   if (!value) return "-";
@@ -47,6 +49,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   const { t, isRTL } = useLanguage();
   const { data: companyResult, isLoading: companyLoading } =
     useCurrentCompany();
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   if (!isOpen || !invoice) return null;
 
@@ -198,6 +201,14 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
             </div>
           </div>
           <button
+            onClick={() => setHistoryOpen(true)}
+            className="me-2 flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-500 transition-all duration-200 hover:bg-white/50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200"
+            aria-label={isRTL ? "سجل الإصدارات" : "Revision history"}
+          >
+            <History className="h-4 w-4" />
+            <span className="hidden sm:inline">{isRTL ? "الإصدارات" : "History"}</span>
+          </button>
+          <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-3 rounded-xl hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all duration-200"
           >
@@ -329,6 +340,13 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
           </div>
         </div>
       </div>
+      <DocumentHistoryDialog
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        documentType="Invoice"
+        documentId={invoice.id}
+        documentNumber={invoice.invoiceNumber}
+      />
     </div>
   );
 };
