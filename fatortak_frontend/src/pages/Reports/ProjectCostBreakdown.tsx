@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import ReportExportButtons from "@/components/reports/ReportExportButtons";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useProjectCostBreakdown } from "../../hooks/useFinancialReports";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -6,7 +7,7 @@ import { formatCurrency } from "../../Helpers/formatCurrency";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
-import { Loader2, Download, ArrowLeft, PieChart } from "lucide-react";
+import { Loader2, ArrowLeft, PieChart } from "lucide-react";
 
 const ProjectCostBreakdown: React.FC = () => {
   const { isRTL } = useLanguage();
@@ -28,10 +29,7 @@ const ProjectCostBreakdown: React.FC = () => {
             <p className="text-sm text-slate-50">{response?.projectName}</p>
           </div>
         </div>
-        <Button variant="outline">
-          <Download className="w-4 h-4 mr-2" />
-          {isRTL ? "تصدير" : "Export"}
-        </Button>
+        <ReportExportButtons filename="project-cost-breakdown" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

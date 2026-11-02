@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ReportExportButtons from "@/components/reports/ReportExportButtons";
 import { useAccountLedger } from "../../hooks/useFinancialReports";
 import { useAccounts } from "../../hooks/useAccounting";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -9,7 +10,7 @@ import { Label } from "../../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Loader2, Download, ArrowLeft, FileText, Search } from "lucide-react";
+import { Loader2, ArrowLeft, FileText, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const GeneralLedger: React.FC = () => {
@@ -24,8 +25,7 @@ const GeneralLedger: React.FC = () => {
   
   const { data: response, isLoading } = useAccountLedger(selectedAccountId, fromDate, toDate);
 
-  const handleExport = () => { /* Export logic */ };
-
+  
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -39,10 +39,7 @@ const GeneralLedger: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="w-4 h-4 mr-2" />
-            {isRTL ? "تصدير" : "Export"}
-          </Button>
+          <ReportExportButtons filename="general-ledger" />
         </div>
       </div>
 

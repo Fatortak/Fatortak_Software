@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ReportExportButtons from "@/components/reports/ReportExportButtons";
 import { useARAging } from "../../hooks/useFinancialReports";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { formatCurrency } from "../../Helpers/formatCurrency";
@@ -7,7 +8,7 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Loader2, Download, ArrowLeft, Clock } from "lucide-react";
+import { Loader2, ArrowLeft, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const ARAging: React.FC = () => {
@@ -16,8 +17,7 @@ const ARAging: React.FC = () => {
   const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split("T")[0]);
   const { data: response, isLoading } = useARAging(asOfDate);
 
-  const handleExport = () => { /* Export logic */ };
-
+  
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -35,10 +35,7 @@ const ARAging: React.FC = () => {
             <Label className="text-xs">{isRTL ? "حتى تاريخ" : "As of Date"}</Label>
             <Input type="date" value={asOfDate} onChange={(e) => setAsOfDate(e.target.value)} className="w-40" />
           </div>
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="w-4 h-4 mr-2" />
-            {isRTL ? "تصدير" : "Export"}
-          </Button>
+          <ReportExportButtons filename="ar-aging" />
         </div>
       </div>
 

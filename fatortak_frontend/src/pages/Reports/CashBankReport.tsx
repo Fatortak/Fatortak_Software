@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ReportExportButtons from "@/components/reports/ReportExportButtons";
 import { useMovementReport } from "../../hooks/useFinancialReports";
 import { useAccounts } from "../../hooks/useAccounting";
 import { useProjects } from "../../hooks/useProjects";
@@ -10,7 +11,7 @@ import { Label } from "../../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Loader2, Download, ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -50,8 +51,7 @@ const CashBankReport: React.FC = () => {
     setExpandedAccounts(prev => ({ ...prev, [accountId]: !prev[accountId] }));
   };
 
-  const handleExport = () => { /* Export logic */ };
-
+  
   const isSingleMode = response?.mode === "SingleAccount";
 
   return (
@@ -67,10 +67,7 @@ const CashBankReport: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="w-4 h-4 mr-2" />
-            {isRTL ? "تصدير" : "Export"}
-          </Button>
+          <ReportExportButtons filename="cash-bank-movements" />
         </div>
       </div>
 

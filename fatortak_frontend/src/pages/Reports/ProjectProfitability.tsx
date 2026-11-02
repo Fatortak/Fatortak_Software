@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ReportExportButtons from "@/components/reports/ReportExportButtons";
 import { useProjectProfitability } from "../../hooks/useFinancialReports";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { formatCurrency } from "../../Helpers/formatCurrency";
@@ -7,7 +8,7 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Loader2, Download, ArrowLeft, TrendingUp } from "lucide-react";
+import { Loader2, ArrowLeft, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const ProjectProfitability: React.FC = () => {
@@ -17,8 +18,7 @@ const ProjectProfitability: React.FC = () => {
   const [toDate, setToDate] = useState("");
   const { data: response, isLoading } = useProjectProfitability(fromDate || undefined, toDate || undefined);
 
-  const handleExport = () => { /* Export logic */ };
-
+  
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -32,10 +32,7 @@ const ProjectProfitability: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="w-4 h-4 mr-2" />
-            {isRTL ? "تصدير" : "Export"}
-          </Button>
+          <ReportExportButtons filename="project-profitability" />
         </div>
       </div>
 
