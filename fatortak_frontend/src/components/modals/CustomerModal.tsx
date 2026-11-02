@@ -6,6 +6,8 @@ import { CustomerCreateDto } from "../../types/api";
 import { toast } from "react-toastify";
 import PhoneInputField from "../ui/PhoneInputField";
 import { isValidPhoneNumber } from "react-phone-number-input";
+import FormErrorSummary, { FormErrorItem } from "@/components/forms/FormErrorSummary";
+import { isValidEmail } from "@/lib/validation";
 
 interface CustomerModalProps {
   isOpen: boolean;
@@ -36,6 +38,9 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const errorSummary: FormErrorItem[] = Object.entries(errors)
+    .filter(([, message]) => !!message)
+    .map(([field, message]) => ({ field, message }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +49,18 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
     const newErrors: Record<string, string> = {};
     if (!formData.name) {
       newErrors.name = t("customerName") + " " + t("required");
+    }
+
+    if (formData.email && !isValidEmail(formData.email)) {
+      newErrors.email = t("emailInvalid");
+    }
+
+    if (formData.taxNumber && formData.taxNumber.length > 50) {
+      newErrors.taxNumber = isRTL ? "الرقم الضريبي طويل جداً" : "Tax number is too long";
+    }
+
+    if (formData.vatNumber && formData.vatNumber.length > 50) {
+      newErrors.vatNumber = isRTL ? "رقم الضريبة طويل جداً" : "VAT number is too long";
     }
 
     if (formData.phone && !isValidPhoneNumber(formData.phone)) {
@@ -120,6 +137,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <FormErrorSummary errors={errorSummary} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Name */}
             <div className="md:col-span-2">
@@ -154,14 +172,20 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                className={`w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white ${
-                  isRTL ? "text-end" : "text-start"
-                }`}
+                onChange={(e) => {
+                  setFormData({ ...formData, email: e.target.value });
+                  setErrors({ ...errors, email: "" });
+                }}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white ${
+                  errors.email
+                    ? "border-red-500"
+                    : "border-slate-300 dark:border-slate-600"
+                } ${isRTL ? "text-end" : "text-start"}`}
                 placeholder={t("email")}
               />
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+              )}
             </div>
 
             {/* Phone */}

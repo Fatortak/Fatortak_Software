@@ -22,6 +22,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCreatePriceList, useUpdatePriceList } from "@/hooks/usePricing";
 import { useItems } from "@/hooks/useItems";
 import { formatCurrency } from "@/Helpers/formatCurrency";
+import FormField from "@/components/forms/FormField";
+import FormErrorSummary, { FormErrorItem } from "@/components/forms/FormErrorSummary";
 import type { PriceListDto } from "@/types/api";
 
 interface Props {
@@ -62,6 +64,8 @@ const PriceListModal: React.FC<Props> = ({ isOpen, priceList, onClose, onSuccess
   const [isDefault, setIsDefault] = useState(false);
   const [notes, setNotes] = useState("");
   const [lines, setLines] = useState<Line[]>([newLine()]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [lineErrors, setLineErrors] = useState<Record<string, Record<string, string>>>({});
 
   useEffect(() => {
     if (!isOpen) return;
@@ -95,16 +99,77 @@ const PriceListModal: React.FC<Props> = ({ isOpen, priceList, onClose, onSuccess
       prev.map((line) => (line.key === key ? { ...line, ...patch } : line))
     );
 
+  const errorSummary: FormErrorItem[] = useMemo(
+    () => [
+      ...Object.entries(errors).map(([field, message]) => ({ field, message })),
+      ...Object.entries(lineErrors).flatMap(([key, issues]) =>
+        Object.entries(issues).map(([field, message]) => ({
+          field: `${key}-${field}`,
+          message,
+        }))
+      ),
+    ],
+    [errors, lineErrors]
+  );
+
   const submit = async () => {
+    const nextErrors: Record<string, string> = {};
+    const nextLineErrors: Record<string, Record<string, string>> = {};
+
     if (!name.trim()) {
-      toast.error(isRTL ? "أدخل اسم قائمة الأسعار" : "Enter a price list name");
-      return;
+      nextErrors.name = isRTL ? "اسم القائمة مطلوب" : "Price list name is required";
     }
-    const valid = lines.filter((line) => line.itemId && line.unitPrice >= 0);
+    if (validTo && validFrom && new Date(validTo).getTime() < new Date(validFrom).getTime()) {
+      nextErrors.validTo = isRTL
+        ? "تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية"
+        : "Valid-to must be on or after valid-from";
+    }
+
+    const valid = lines.filter((line) => {
+      const issues: Record<string, string> = {};
+      if (!line.itemId) issues.itemId = isRTL ? "اختر الصنف" : "Choose an item";
+      if (!Number.isFinite(line.unitPrice) || line.unitPrice < 0)
+        issues.unitPrice = isRTL ? "سعر غير صالح" : "Invalid price";
+      if (!Number.isFinite(line.minQuantity) || line.minQuantity < 1)
+        issues.minQuantity = isRTL ? "1 على الأقل" : "At least 1";
+      if (
+        line.maxQuantity &&
+        Number(line.maxQuantity) < line.minQuantity
+      )
+        issues.maxQuantity = isRTL
+          ? "يجب أن يكون ≥ الحد الأدنى"
+          : "Must be ≥ minimum";
+      if (Object.keys(issues).length > 0) nextLineErrors[line.key] = issues;
+      return Object.keys(issues).length === 0;
+    });
+
     if (valid.length === 0) {
-      toast.error(isRTL ? "أضف بند سعر واحداً" : "Add at least one price line");
+      nextErrors.lines = isRTL
+        ? "أضف بند سعر صالحاً واحداً على الأقل"
+        : "Add at least one valid price line";
+    }
+
+    const overlaps = valid.some((line, index) =>
+      valid.slice(index + 1).some((other) => {
+        if (line.itemId !== other.itemId) return false;
+        const lineMax = line.maxQuantity ? Number(line.maxQuantity) : Infinity;
+        const otherMax = other.maxQuantity ? Number(other.maxQuantity) : Infinity;
+        return line.minQuantity <= otherMax && other.minQuantity <= lineMax;
+      })
+    );
+    if (overlaps) {
+      nextErrors.lines = isRTL
+        ? "توجد نطاقات كمية متداخلة لنفس الصنف"
+        : "Quantity ranges overlap for the same item";
+    }
+
+    setErrors(nextErrors);
+    setLineErrors(nextLineErrors);
+    if (Object.keys(nextErrors).length > 0 || Object.keys(nextLineErrors).length > 0) {
+      toast.error(isRTL ? "راجع الحقول المطلوبة" : "Review the highlighted fields");
       return;
     }
+
     const payload = {
       name: name.trim(),
       currency: currency || undefined,
@@ -145,23 +210,40 @@ const PriceListModal: React.FC<Props> = ({ isOpen, priceList, onClose, onSuccess
         </DialogHeader>
 
         <div className="space-y-5">
+          <FormErrorSummary errors={errorSummary} />
           <div className="grid gap-4 sm:grid-cols-[1.6fr_1fr_1fr_1fr]">
-            <div className="space-y-1.5">
-              <Label>{isRTL ? "الاسم" : "Name"} *</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={isRTL ? "مثال: قائمة التجزئة" : "e.g. Retail price list"} aria-label={isRTL ? "الاسم" : "Name"} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>{isRTL ? "العملة" : "Currency"}</Label>
+            <FormField label={isRTL ? "الاسم" : "Name"} required error={errors.name}>
+              <Input
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (errors.name) setErrors((prev) => ({ ...prev, name: "" }));
+                }}
+                aria-invalid={!!errors.name}
+                className={errors.name ? "border-rose-300 dark:border-rose-700" : ""}
+                placeholder={isRTL ? "مثال: قائمة التجزئة" : "e.g. Retail price list"}
+                aria-label={isRTL ? "الاسم" : "Name"}
+              />
+            </FormField>
+            <FormField label={isRTL ? "العملة" : "Currency"}>
               <Input value={currency} onChange={(e) => setCurrency(e.target.value)} placeholder="EGP" aria-label={isRTL ? "العملة" : "Currency"} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>{isRTL ? "تبدأ" : "Valid from"}</Label>
+            </FormField>
+            <FormField label={isRTL ? "تبدأ" : "Valid from"}>
               <Input type="date" value={validFrom} onChange={(e) => setValidFrom(e.target.value)} aria-label={isRTL ? "تبدأ" : "Valid from"} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>{isRTL ? "تنتهي" : "Valid to"}</Label>
-              <Input type="date" value={validTo} onChange={(e) => setValidTo(e.target.value)} aria-label={isRTL ? "تنتهي" : "Valid to"} />
-            </div>
+            </FormField>
+            <FormField label={isRTL ? "تنتهي" : "Valid to"} error={errors.validTo}>
+              <Input
+                type="date"
+                value={validTo}
+                onChange={(e) => {
+                  setValidTo(e.target.value);
+                  if (errors.validTo) setErrors((prev) => ({ ...prev, validTo: "" }));
+                }}
+                aria-invalid={!!errors.validTo}
+                className={errors.validTo ? "border-rose-300 dark:border-rose-700" : ""}
+                aria-label={isRTL ? "تنتهي" : "Valid to"}
+              />
+            </FormField>
           </div>
 
           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
@@ -189,17 +271,22 @@ const PriceListModal: React.FC<Props> = ({ isOpen, priceList, onClose, onSuccess
                   const item = items.find((i) => i.id === value);
                   updateLine(line.key, { itemId: value, unitPrice: item?.unitPrice ?? line.unitPrice });
                 }}>
-                  <SelectTrigger className="h-9" aria-label={isRTL ? "الصنف" : "Item"}>
+                  <SelectTrigger className={`h-9 ${lineErrors[line.key]?.itemId ? "border-rose-300 dark:border-rose-700" : ""}`} aria-label={isRTL ? "الصنف" : "Item"} aria-invalid={!!lineErrors[line.key]?.itemId}>
                     <SelectValue placeholder={isRTL ? "اختر الصنف" : "Choose item"} />
                   </SelectTrigger>
                   <SelectContent>
                     {items.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <Input type="number" min={0} step="0.01" value={line.unitPrice} onChange={(e) => updateLine(line.key, { unitPrice: Number(e.target.value) || 0 })} className="h-9 px-2" aria-label={isRTL ? "السعر" : "Price"} />
-                <Input type="number" min={1} value={line.minQuantity} onChange={(e) => updateLine(line.key, { minQuantity: Number(e.target.value) || 1 })} className="h-9 px-2" aria-label={isRTL ? "أدنى كمية" : "Minimum quantity"} />
-                <Input type="number" min={1} value={line.maxQuantity} onChange={(e) => updateLine(line.key, { maxQuantity: e.target.value })} placeholder="∞" className="h-9 px-2" aria-label={isRTL ? "أقصى كمية" : "Maximum quantity"} />
+                <Input type="number" min={0} step="0.01" value={line.unitPrice} onChange={(e) => updateLine(line.key, { unitPrice: Number(e.target.value) || 0 })} className={`h-9 px-2 ${lineErrors[line.key]?.unitPrice ? "border-rose-300 dark:border-rose-700" : ""}`} aria-label={isRTL ? "السعر" : "Price"} aria-invalid={!!lineErrors[line.key]?.unitPrice} />
+                <Input type="number" min={1} value={line.minQuantity} onChange={(e) => updateLine(line.key, { minQuantity: Number(e.target.value) || 1 })} className={`h-9 px-2 ${lineErrors[line.key]?.minQuantity ? "border-rose-300 dark:border-rose-700" : ""}`} aria-label={isRTL ? "أدنى كمية" : "Minimum quantity"} aria-invalid={!!lineErrors[line.key]?.minQuantity} />
+                <Input type="number" min={1} value={line.maxQuantity} onChange={(e) => updateLine(line.key, { maxQuantity: e.target.value })} placeholder="∞" className={`h-9 px-2 ${lineErrors[line.key]?.maxQuantity ? "border-rose-300 dark:border-rose-700" : ""}`} aria-label={isRTL ? "أقصى كمية" : "Maximum quantity"} aria-invalid={!!lineErrors[line.key]?.maxQuantity} />
                 <Button type="button" variant="ghost" size="icon-sm" disabled={lines.length === 1} onClick={() => setLines((prev) => prev.filter((l) => l.key !== line.key))} aria-label={isRTL ? "حذف السطر" : "Remove line"}><Trash2 className="h-4 w-4 text-rose-500" /></Button>
+                {lineErrors[line.key] && (
+                  <p className="col-span-5 text-xs font-medium text-rose-600 dark:text-rose-400">
+                    {Object.values(lineErrors[line.key]).join(" · ")}
+                  </p>
+                )}
               </div>
             ))}
             <div className="border-t border-slate-200 px-3 py-2 dark:border-slate-800">

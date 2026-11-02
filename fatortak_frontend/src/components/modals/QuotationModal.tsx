@@ -28,6 +28,15 @@ import {
 } from "@/hooks/useQuotations";
 import { formatCurrency } from "@/Helpers/formatCurrency";
 import { pricingService } from "@/services/pricingService";
+import FormField from "@/components/forms/FormField";
+import FormErrorSummary, { FormErrorItem } from "@/components/forms/FormErrorSummary";
+import {
+  isDateRangeValid,
+  isNonEmpty,
+  isNonNegativeNumber,
+  isPercentage,
+  isPositiveNumber,
+} from "@/lib/validation";
 import type { QuotationDto } from "@/types/api";
 
 interface QuotationModalProps {
@@ -88,6 +97,8 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("");
   const [lines, setLines] = useState<Line[]>([newLine()]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [lineErrors, setLineErrors] = useState<Record<string, Record<string, string>>>({});
 
   useEffect(() => {
     if (!isOpen) return;
@@ -132,6 +143,19 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
     return { subtotal, discount, vat, total: subtotal - discount + vat };
   }, [lines]);
 
+  const errorSummary: FormErrorItem[] = useMemo(
+    () => [
+      ...Object.entries(errors).map(([field, message]) => ({ field, message })),
+      ...Object.entries(lineErrors).flatMap(([key, issues]) =>
+        Object.entries(issues).map(([field, message]) => ({
+          field: `${key}-${field}`,
+          message,
+        }))
+      ),
+    ],
+    [errors, lineErrors]
+  );
+
   const updateLine = (key: string, patch: Partial<Line>) =>
     setLines((prev) =>
       prev.map((line) => (line.key === key ? { ...line, ...patch } : line))
@@ -159,16 +183,78 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
     });
   };
 
-  const handleSubmit = async () => {
+  const validate = () => {
+    const nextErrors: Record<string, string> = {};
+    const nextLineErrors: Record<string, Record<string, string>> = {};
+
     if (!customerId) {
-      toast.error(isRTL ? "اختر العميل أولاً" : "Choose a customer first");
-      return;
+      nextErrors.customerId = isRTL ? "اختر العميل" : "Choose a customer";
     }
-    const validLines = lines.filter(
-      (line) => line.quantity > 0 && line.unitPrice >= 0 && line.description.trim()
-    );
-    if (validLines.length === 0) {
-      toast.error(isRTL ? "أضف بنداً واحداً على الأقل" : "Add at least one line item");
+    if (!issueDate) {
+      nextErrors.issueDate = isRTL ? "تاريخ العرض مطلوب" : "Issue date is required";
+    }
+    if (!validUntil) {
+      nextErrors.validUntil = isRTL ? "تاريخ الصلاحية مطلوب" : "Valid-until date is required";
+    } else if (issueDate && !isDateRangeValid(issueDate, validUntil)) {
+      nextErrors.validUntil = isRTL
+        ? "تاريخ الصلاحية يجب أن يكون بعد تاريخ العرض"
+        : "Valid-until must be on or after the issue date";
+    }
+
+    let validLineCount = 0;
+    lines.forEach((line) => {
+      const lineIssues: Record<string, string> = {};
+      if (!isNonEmpty(line.description)) {
+        lineIssues.description = isRTL ? "الوصف مطلوب" : "Description is required";
+      }
+      if (!isPositiveNumber(line.quantity)) {
+        lineIssues.quantity = isRTL ? "أكبر من صفر" : "Must be greater than zero";
+      }
+      if (!isNonNegativeNumber(line.unitPrice)) {
+        lineIssues.unitPrice = isRTL ? "سعر غير صالح" : "Invalid price";
+      }
+      if (!isPercentage(line.discountPercent)) {
+        lineIssues.discountPercent = isRTL ? "0 إلى 100" : "0 to 100";
+      }
+      if (!isPercentage(line.vatRate * 100)) {
+        lineIssues.vatRate = isRTL ? "0 إلى 100" : "0 to 100";
+      }
+      if (Object.keys(lineIssues).length === 0) validLineCount++;
+      else nextLineErrors[line.key] = lineIssues;
+    });
+
+    if (validLineCount === 0) {
+      nextErrors.lines = isRTL
+        ? "أضف بنداً صالحاً واحداً على الأقل"
+        : "Add at least one valid line item";
+    }
+
+    setErrors(nextErrors);
+    setLineErrors(nextLineErrors);
+
+    const summary: FormErrorItem[] = [
+      ...Object.entries(nextErrors).map(([field, message]) => ({ field, message })),
+      ...Object.entries(nextLineErrors).flatMap(([key, issues]) =>
+        Object.entries(issues).map(([field, message]) => ({
+          field: `${key}-${field}`,
+          message,
+        }))
+      ),
+    ];
+
+    return {
+      valid: summary.length === 0,
+      summary,
+      validLines: lines.filter((line) => !nextLineErrors[line.key]),
+    };
+  };
+
+  const handleSubmit = async () => {
+    const validation = validate();
+    if (!validation.valid) {
+      toast.error(
+        isRTL ? "راجع الحقول المطلوبة" : "Review the highlighted fields"
+      );
       return;
     }
 
@@ -179,7 +265,7 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
       status: quotation?.status || "Draft",
       notes,
       terms,
-      items: validLines.map((line) => ({
+      items: validation.validLines.map((line) => ({
         itemId: line.itemId,
         description: line.description.trim(),
         quantity: line.quantity,
@@ -207,7 +293,15 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent
+        className="max-h-[94vh] overflow-y-auto sm:max-w-4xl"
+        onKeyDown={(event) => {
+          if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+            event.preventDefault();
+            void handleSubmit();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-brand-600" />
@@ -218,11 +312,27 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-5">
+          <FormErrorSummary errors={errorSummary} />
+
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>{isRTL ? "العميل" : "Customer"} *</Label>
-              <Select value={customerId} onValueChange={setCustomerId}>
-                <SelectTrigger aria-label={isRTL ? "العميل" : "Customer"}>
+            <FormField
+              label={isRTL ? "العميل" : "Customer"}
+              required
+              error={errors.customerId}
+            >
+              <Select
+                value={customerId}
+                onValueChange={(value) => {
+                  setCustomerId(value);
+                  if (errors.customerId)
+                    setErrors((prev) => ({ ...prev, customerId: "" }));
+                }}
+              >
+                <SelectTrigger
+                  aria-label={isRTL ? "العميل" : "Customer"}
+                  aria-invalid={!!errors.customerId}
+                  className={errors.customerId ? "border-rose-300 dark:border-rose-700" : ""}
+                >
                   <SelectValue placeholder={isRTL ? "اختر العميل" : "Select customer"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -233,16 +343,44 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>{isRTL ? "تاريخ العرض" : "Issue date"}</Label>
-                <Input type="date" aria-label={isRTL ? "تاريخ العرض" : "Issue date"} value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>{isRTL ? "صالح حتى" : "Valid until"}</Label>
-                <Input type="date" aria-label={isRTL ? "صالح حتى" : "Valid until"} value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
-              </div>
+              <FormField
+                label={isRTL ? "تاريخ العرض" : "Issue date"}
+                required
+                error={errors.issueDate}
+              >
+                <Input
+                  type="date"
+                  aria-label={isRTL ? "تاريخ العرض" : "Issue date"}
+                  aria-invalid={!!errors.issueDate}
+                  className={errors.issueDate ? "border-rose-300 dark:border-rose-700" : ""}
+                  value={issueDate}
+                  onChange={(e) => {
+                    setIssueDate(e.target.value);
+                    if (errors.issueDate)
+                      setErrors((prev) => ({ ...prev, issueDate: "" }));
+                  }}
+                />
+              </FormField>
+              <FormField
+                label={isRTL ? "صالح حتى" : "Valid until"}
+                required
+                error={errors.validUntil}
+              >
+                <Input
+                  type="date"
+                  aria-label={isRTL ? "صالح حتى" : "Valid until"}
+                  aria-invalid={!!errors.validUntil}
+                  className={errors.validUntil ? "border-rose-300 dark:border-rose-700" : ""}
+                  value={validUntil}
+                  onChange={(e) => {
+                    setValidUntil(e.target.value);
+                    if (errors.validUntil)
+                      setErrors((prev) => ({ ...prev, validUntil: "" }));
+                  }}
+                />
+              </FormField>
             </div>
           </div>
 
@@ -275,15 +413,25 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
                       value={line.description}
                       onChange={(e) => updateLine(line.key, { description: e.target.value })}
                       aria-label={isRTL ? "وصف البند" : "Line description"}
+                      aria-invalid={!!lineErrors[line.key]?.description}
                       placeholder={isRTL ? "وصف البند" : "Line description"}
-                      className="h-8 px-2 text-xs"
+                      className={`h-8 px-2 text-xs ${
+                        lineErrors[line.key]?.description
+                          ? "border-rose-300 dark:border-rose-700"
+                          : ""
+                      }`}
                     />
                   </div>
                   <Input
                     type="number"
                     min={1}
-                    className="h-9 px-2"
+                    className={`h-9 px-2 ${
+                      lineErrors[line.key]?.quantity
+                        ? "border-rose-300 dark:border-rose-700"
+                        : ""
+                    }`}
                     aria-label={isRTL ? "الكمية" : "Quantity"}
+                    aria-invalid={!!lineErrors[line.key]?.quantity}
                     value={line.quantity}
                     onChange={(e) => updateLine(line.key, { quantity: Number(e.target.value) || 0 })}
                   />
@@ -291,8 +439,13 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
                     type="number"
                     min={0}
                     step="0.01"
-                    className="h-9 px-2"
+                    className={`h-9 px-2 ${
+                      lineErrors[line.key]?.unitPrice
+                        ? "border-rose-300 dark:border-rose-700"
+                        : ""
+                    }`}
                     aria-label={isRTL ? "سعر الوحدة" : "Unit price"}
+                    aria-invalid={!!lineErrors[line.key]?.unitPrice}
                     value={line.unitPrice}
                     onChange={(e) => updateLine(line.key, { unitPrice: Number(e.target.value) || 0 })}
                   />
@@ -300,8 +453,13 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
                     type="number"
                     min={0}
                     max={100}
-                    className="h-9 px-2"
+                    className={`h-9 px-2 ${
+                      lineErrors[line.key]?.discountPercent
+                        ? "border-rose-300 dark:border-rose-700"
+                        : ""
+                    }`}
                     aria-label={isRTL ? "نسبة الخصم" : "Discount percent"}
+                    aria-invalid={!!lineErrors[line.key]?.discountPercent}
                     value={line.discountPercent}
                     onChange={(e) => updateLine(line.key, { discountPercent: Number(e.target.value) || 0 })}
                   />
@@ -310,8 +468,13 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
                     min={0}
                     max={100}
                     step="0.01"
-                    className="h-9 px-2"
+                    className={`h-9 px-2 ${
+                      lineErrors[line.key]?.vatRate
+                        ? "border-rose-300 dark:border-rose-700"
+                        : ""
+                    }`}
                     aria-label={isRTL ? "نسبة الضريبة" : "VAT percent"}
+                    aria-invalid={!!lineErrors[line.key]?.vatRate}
                     value={Math.round(line.vatRate * 10000) / 100}
                     onChange={(e) => updateLine(line.key, { vatRate: (Number(e.target.value) || 0) / 100 })}
                   />
@@ -321,9 +484,15 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
                     size="icon-sm"
                     disabled={lines.length === 1}
                     onClick={() => setLines((prev) => prev.filter((l) => l.key !== line.key))}
+                    aria-label={isRTL ? "حذف البند" : "Remove line"}
                   >
                     <Trash2 className="h-4 w-4 text-rose-500" />
                   </Button>
+                  {lineErrors[line.key] && (
+                    <p className="col-span-6 text-xs font-medium text-rose-600 dark:text-rose-400">
+                      {Object.values(lineErrors[line.key]).join(" · ")}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -386,7 +555,10 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-wrap items-center gap-2">
+          <p className="me-auto hidden text-xs text-slate-400 sm:block">
+            {isRTL ? "Ctrl/Cmd + Enter للحفظ" : "Ctrl/Cmd + Enter to save"}
+          </p>
           <Button variant="outline" onClick={onClose} disabled={saving}>
             {isRTL ? "إلغاء" : "Cancel"}
           </Button>

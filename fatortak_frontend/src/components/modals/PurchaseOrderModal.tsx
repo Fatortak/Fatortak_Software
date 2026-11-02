@@ -23,6 +23,8 @@ import { useCreatePurchaseOrder } from "@/hooks/usePurchaseOrders";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useItems } from "@/hooks/useItems";
 import { formatCurrency } from "@/Helpers/formatCurrency";
+import FormErrorSummary, { FormErrorItem } from "@/components/forms/FormErrorSummary";
+import { isDateRangeValid, isNonNegativeNumber, isPercentage, isPositiveNumber } from "@/lib/validation";
 import type { ItemDto } from "@/types/api";
 
 interface Props {
@@ -71,6 +73,7 @@ const PurchaseOrderModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => 
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("");
   const [lines, setLines] = useState<Line[]>([newLine()]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!isOpen) return;
@@ -116,15 +119,41 @@ const PurchaseOrderModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => 
   };
 
   const submit = async () => {
+    const nextErrors: Record<string, string> = {};
     if (!supplierId) {
-      toast.error(isRTL ? "اختر المورد" : "Select a supplier");
-      return;
+      nextErrors.supplierId = isRTL ? "اختر المورد" : "Choose a supplier";
     }
-    const valid = lines.filter((line) => line.description.trim() && line.quantity > 0);
+    if (!issueDate) {
+      nextErrors.issueDate = isRTL ? "تاريخ الإصدار مطلوب" : "Issue date is required";
+    }
+    if (!expectedDate) {
+      nextErrors.expectedDate = isRTL ? "تاريخ التسليم مطلوب" : "Expected date is required";
+    } else if (issueDate && !isDateRangeValid(issueDate, expectedDate)) {
+      nextErrors.expectedDate = isRTL
+        ? "التسليم يجب أن يكون بعد الإصدار"
+        : "Delivery must be on or after the issue date";
+    }
+
+    const valid = lines.filter((line) => {
+      if (!line.description.trim()) return false;
+      if (!isPositiveNumber(line.quantity)) return false;
+      if (!isNonNegativeNumber(line.unitPrice)) return false;
+      if (line.discountPercent !== undefined && !isPercentage(line.discountPercent)) return false;
+      if (line.vatRate !== "" && line.vatRate !== undefined && !isPercentage(Number(line.vatRate))) return false;
+      return true;
+    });
     if (valid.length === 0) {
-      toast.error(isRTL ? "أضف بنداً واحداً على الأقل" : "Add at least one line");
+      nextErrors.lines = isRTL
+        ? "أضف بنداً صالحاً واحداً على الأقل"
+        : "Add at least one valid line";
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      toast.error(isRTL ? "راجع الحقول المطلوبة" : "Review the highlighted fields");
       return;
     }
+
     try {
       await createMutation.mutateAsync({
         supplierId,
@@ -148,6 +177,11 @@ const PurchaseOrderModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => 
     }
   };
 
+  const errorSummary: FormErrorItem[] = useMemo(
+    () => Object.entries(errors).map(([field, message]) => ({ field, message })),
+    [errors]
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-4xl">
@@ -159,11 +193,12 @@ const PurchaseOrderModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => 
         </DialogHeader>
 
         <div className="space-y-5">
+          <FormErrorSummary errors={errorSummary} />
           <div className="grid gap-4 sm:grid-cols-[1.5fr_1fr_1fr]">
             <div className="space-y-1.5">
               <Label>{isRTL ? "المورد" : "Supplier"} *</Label>
-              <Select value={supplierId} onValueChange={setSupplierId}>
-                <SelectTrigger aria-label={isRTL ? "المورد" : "Supplier"}>
+              <Select value={supplierId} onValueChange={(value) => { setSupplierId(value); setErrors((prev) => ({ ...prev, supplierId: "" })); }}>
+                <SelectTrigger aria-label={isRTL ? "المورد" : "Supplier"} aria-invalid={!!errors.supplierId} className={errors.supplierId ? "border-rose-300 dark:border-rose-700" : ""}>
                   <SelectValue placeholder={isRTL ? "اختر المورد" : "Select supplier"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -174,24 +209,31 @@ const PurchaseOrderModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) => 
                   ))}
                 </SelectContent>
               </Select>
+              {errors.supplierId && <p className="text-xs text-rose-600">{errors.supplierId}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>{isRTL ? "تاريخ الإصدار" : "Issue date"}</Label>
               <Input
                 type="date"
                 value={issueDate}
-                onChange={(e) => setIssueDate(e.target.value)}
+                onChange={(e) => { setIssueDate(e.target.value); setErrors((prev) => ({ ...prev, issueDate: "" })); }}
                 aria-label={isRTL ? "تاريخ الإصدار" : "Issue date"}
+                aria-invalid={!!errors.issueDate}
+                className={errors.issueDate ? "border-rose-300 dark:border-rose-700" : ""}
               />
+              {errors.issueDate && <p className="text-xs text-rose-600">{errors.issueDate}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>{isRTL ? "التسليم المتوقع" : "Expected date"}</Label>
               <Input
                 type="date"
                 value={expectedDate}
-                onChange={(e) => setExpectedDate(e.target.value)}
+                onChange={(e) => { setExpectedDate(e.target.value); setErrors((prev) => ({ ...prev, expectedDate: "" })); }}
                 aria-label={isRTL ? "التسليم المتوقع" : "Expected date"}
+                aria-invalid={!!errors.expectedDate}
+                className={errors.expectedDate ? "border-rose-300 dark:border-rose-700" : ""}
               />
+              {errors.expectedDate && <p className="text-xs text-rose-600">{errors.expectedDate}</p>}
             </div>
           </div>
 

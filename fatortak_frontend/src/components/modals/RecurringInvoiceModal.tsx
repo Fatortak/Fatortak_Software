@@ -22,6 +22,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCreateRecurringInvoice } from "@/hooks/useRecurringInvoices";
 import { useCustomers } from "@/hooks/useCustomers";
 import { formatCurrency } from "@/Helpers/formatCurrency";
+import FormErrorSummary, { FormErrorItem } from "@/components/forms/FormErrorSummary";
+import { isDateRangeValid, isNonNegativeNumber, isPercentage, isPositiveNumber } from "@/lib/validation";
 
 interface Props {
   isOpen: boolean;
@@ -67,6 +69,7 @@ const RecurringInvoiceModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) 
   const [autoSend, setAutoSend] = useState(false);
   const [notes, setNotes] = useState("");
   const [lines, setLines] = useState<Line[]>([newLine()]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!isOpen) return;
@@ -97,19 +100,45 @@ const RecurringInvoiceModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) 
     );
 
   const submit = async () => {
+    const nextErrors: Record<string, string> = {};
     if (!name.trim()) {
-      toast.error(isRTL ? "أدخل اسم الجدولة" : "Enter a schedule name");
-      return;
+      nextErrors.name = isRTL ? "اسم الجدولة مطلوب" : "Schedule name is required";
     }
     if (!customerId) {
-      toast.error(isRTL ? "اختر العميل" : "Select a customer");
-      return;
+      nextErrors.customerId = isRTL ? "اختر العميل" : "Choose a customer";
     }
-    const valid = lines.filter((line) => line.description.trim() && line.quantity > 0);
+    if (!startDate) {
+      nextErrors.startDate = isRTL ? "تاريخ البداية مطلوب" : "Start date is required";
+    }
+    if (endDate && startDate && !isDateRangeValid(startDate, endDate)) {
+      nextErrors.endDate = isRTL
+        ? "تاريخ النهاية يجب أن يكون بعد البداية"
+        : "End date must be on or after the start date";
+    }
+    if (!Number.isFinite(dueDays) || dueDays < 0 || dueDays > 365) {
+      nextErrors.dueDays = isRTL ? "بين 0 و365 يوماً" : "Between 0 and 365 days";
+    }
+
+    const valid = lines.filter((line) => {
+      if (!line.description.trim()) return false;
+      if (!isPositiveNumber(line.quantity)) return false;
+      if (!isNonNegativeNumber(line.unitPrice)) return false;
+      if (line.discountPercent !== undefined && !isPercentage(line.discountPercent)) return false;
+      if (line.vatRate !== "" && line.vatRate !== undefined && !isPercentage(Number(line.vatRate))) return false;
+      return true;
+    });
     if (valid.length === 0) {
-      toast.error(isRTL ? "أضف بنداً واحداً على الأقل" : "Add at least one line");
+      nextErrors.lines = isRTL
+        ? "أضف بنداً صالحاً واحداً على الأقل"
+        : "Add at least one valid line";
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      toast.error(isRTL ? "راجع الحقول المطلوبة" : "Review the highlighted fields");
       return;
     }
+
     try {
       await createMutation.mutateAsync({
         name: name.trim(),
@@ -136,6 +165,10 @@ const RecurringInvoiceModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) 
     }
   };
 
+  const errorSummary: FormErrorItem[] = Object.entries(errors).map(
+    ([field, message]) => ({ field, message })
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-4xl">
@@ -147,6 +180,7 @@ const RecurringInvoiceModal: React.FC<Props> = ({ isOpen, onClose, onSuccess }) 
         </DialogHeader>
 
         <div className="space-y-5">
+          <FormErrorSummary errors={errorSummary} />
           <div className="grid gap-4 sm:grid-cols-[1.4fr_1.2fr_1fr]">
             <div className="space-y-1.5">
               <Label>{isRTL ? "اسم الجدولة" : "Schedule name"} *</Label>
