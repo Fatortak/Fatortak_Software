@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { AuthResponseDto, UserDto, TenantDto } from "../types/api";
-import { apiClient, ServiceResult } from "../services/api";
+import { apiClient, API_BASE_URL, ServiceResult } from "../services/api";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface AuthContextType {
@@ -121,7 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = () => {
-    void fetch(`${import.meta.env.VITE_API_URL || "https://localhost:44338"}/api/auth/logout`, {
+    void fetch(`${API_BASE_URL}/api/auth/logout`, {
       method: "POST",
       credentials: "include",
     }).catch(() => undefined);

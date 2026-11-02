@@ -1,5 +1,26 @@
 // Enhanced API client without Supabase dependencies
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "https://localhost:44338";
+const configuredApiUrl =
+  import.meta.env.VITE_API_URL || "https://localhost:44338";
+
+const alignLocalApiHost = (value: string) => {
+  if (typeof window === "undefined") return value;
+  try {
+    const url = new URL(value);
+    const localHosts = ["localhost", "127.0.0.1"];
+    if (
+      localHosts.includes(url.hostname) &&
+      localHosts.includes(window.location.hostname) &&
+      url.hostname !== window.location.hostname
+    ) {
+      url.hostname = window.location.hostname;
+    }
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return value;
+  }
+};
+
+export const API_BASE_URL = alignLocalApiHost(configuredApiUrl);
 
 export interface ServiceResult<T> {
   success: boolean;
