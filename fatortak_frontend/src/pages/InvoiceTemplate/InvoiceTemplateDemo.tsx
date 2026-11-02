@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import TemplateSelector from "./TemplateSelector";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, Save } from "lucide-react";
+import { ArrowLeft, FileText, Printer, Save } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
 import { invoiceTemplates } from "@/components/invoice-templates";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -151,86 +152,105 @@ const InvoiceTemplateDemo: React.FC = () => {
   // Function to handle template selection
   const handleSelectTemplate = (templateId: string) => {
     setSelectedTemplate(templateId);
-    setShowTemplateSelector(false);
   };
+
+  const handlePreview = () => setShowTemplateSelector(false);
 
   if (showTemplateSelector) {
     return (
-      <div>
-        <TemplateSelector
-          onSelectTemplate={handleSelectTemplate}
-          selectedTemplate={selectedTemplate}
-          isRTL={isRTL}
-          t={t}
-          companyLogo={currentCompany?.logoUrl || mockCompany.logoUrl}
-          onSelectColor={setSelectedColor}
-          selectedColor={selectedColor}
-        />
-      </div>
+      <TemplateSelector
+        onSelectTemplate={handleSelectTemplate}
+        onPreview={handlePreview}
+        selectedTemplate={selectedTemplate}
+        isRTL={isRTL}
+        t={t}
+        companyLogo={currentCompany?.logoUrl || mockCompany.logoUrl}
+        onSelectColor={setSelectedColor}
+        selectedColor={selectedColor}
+      />
     );
   }
 
   // Get the selected template component
   const SelectedTemplateComponent =
     invoiceTemplates[selectedTemplate as keyof typeof invoiceTemplates];
+  const previewInvoice = {
+    ...mockInvoice,
+    invoiceType: invoiceType === "sell" ? "Sell" : "Buy",
+    currency: currentCompany?.currency || mockInvoice.currency,
+  };
 
   return (
-    <div className="min-h-screen bg-canvas dark:bg-slate-950 p-8">
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-6 flex justify-between items-center">
-          <Button
-            onClick={() => setShowTemplateSelector(true)}
-            variant="outline"
-            className="gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {isRTL ? "العودة إلى القوالب" : "Back to Templates"}
-          </Button>
+    <div className="min-h-screen space-y-6 bg-canvas p-4 sm:p-6 dark:bg-slate-950">
+      <PageHeader
+        eyebrow={isRTL ? "معاينة القالب" : "Template preview"}
+        title={isRTL ? "معاينة الفاتورة" : "Invoice preview"}
+        description={
+          isRTL
+            ? "راجع الشكل النهائي للفاتورة قبل حفظ القالب."
+            : "Review the final invoice look before saving this template."
+        }
+        actions={
+          <div className="flex flex-wrap gap-2 print:hidden">
+            <Button
+              variant="outline"
+              onClick={() => setShowTemplateSelector(true)}
+            >
+              <ArrowLeft className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
+              {isRTL ? "تغيير القالب" : "Change template"}
+            </Button>
+            <Button variant="outline" onClick={() => window.print()}>
+              <Printer className="h-4 w-4" />
+              {isRTL ? "طباعة" : "Print"}
+            </Button>
+            <Button
+              onClick={handleUpdateTemplate}
+              disabled={updateInvoiceTemplateMutation.isPending}
+            >
+              <Save className="h-4 w-4" />
+              {updateInvoiceTemplateMutation.isPending
+                ? isRTL
+                  ? "جارٍ الحفظ..."
+                  : "Saving..."
+                : isRTL
+                  ? "حفظ القالب"
+                  : "Save template"}
+            </Button>
+          </div>
+        }
+      />
 
-          <Button
-            onClick={handleUpdateTemplate}
-            disabled={updateInvoiceTemplateMutation.isPending}
-            className="gap-2"
-          >
-            <Save className="w-4 h-4" />
-            {updateInvoiceTemplateMutation.isPending
-              ? isRTL
-                ? "جاري الحفظ..."
-                : "Saving..."
-              : isRTL
-              ? "حفظ القالب"
-              : "Save Template"}
-          </Button>
+      <div className="mx-auto max-w-5xl space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+            <FileText className="h-4 w-4 text-brand-600" />
+            <span className="font-medium">
+              {selectedTemplate.replace(/-/g, " ")}
+            </span>
+            <span className="text-slate-300 dark:text-slate-600">·</span>
+            <span className="text-slate-500">{selectedColor.replace(/-/g, " ")}</span>
+          </div>
+          <span className="text-xs text-slate-400">
+            {invoiceType === "sell"
+              ? isRTL ? "فاتورة بيع" : "Sales invoice"
+              : isRTL ? "فاتورة شراء" : "Purchase invoice"}
+          </span>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-8">
-          <div className="mb-6 flex items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-700">
-            <div className="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center">
-              <FileText className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                {isRTL ? "معاينة القالب" : "Template Preview"}
-              </h2>
-              <p className="text-slate-600 dark:text-slate-400">
-                {selectedTemplate}
-              </p>
-            </div>
-          </div>
-
-          {/* Template Preview */}
-          <div id="invoice-preview">
-            <SelectedTemplateComponent
-              invoice={mockInvoice}
-              company={currentCompany || mockCompany}
-              isRTL={isRTL}
-              t={t}
-              formatCurrency={formatCurrency}
-              getStatusColor={getStatusColor}
-              getInvoiceTypeColor={getInvoiceTypeColor}
-              customColor={selectedColor}
-            />
-          </div>
+        <div
+          id="invoice-preview"
+          className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:p-8 dark:border-slate-800"
+        >
+          <SelectedTemplateComponent
+            invoice={previewInvoice}
+            company={currentCompany || mockCompany}
+            isRTL={isRTL}
+            t={t}
+            formatCurrency={formatCurrency}
+            getStatusColor={getStatusColor}
+            getInvoiceTypeColor={getInvoiceTypeColor}
+            customColor={selectedColor}
+          />
         </div>
       </div>
     </div>

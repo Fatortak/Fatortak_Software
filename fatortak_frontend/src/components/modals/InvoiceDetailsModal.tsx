@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   X,
   Download,
@@ -16,6 +17,7 @@ import {
   Paperclip,
   Eye,
   History,
+  LayoutTemplate,
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useCurrentCompany } from "../../hooks/useCompanies";
@@ -208,6 +210,17 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
             <History className="h-4 w-4" />
             <span className="hidden sm:inline">{isRTL ? "الإصدارات" : "History"}</span>
           </button>
+          <Link
+            to={
+              invoice.invoiceType?.toLowerCase() === "sell"
+                ? "/invoice-templates/sell"
+                : "/invoice-templates/buy"
+            }
+            className="me-2 hidden items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-500 transition-all duration-200 hover:bg-white/50 hover:text-slate-700 sm:flex dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200"
+          >
+            <LayoutTemplate className="h-4 w-4" />
+            <span>{isRTL ? "القالب" : "Template"}</span>
+          </Link>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-3 rounded-xl hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all duration-200"
