@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCreateSupplierBill } from "@/hooks/usePurchaseOrders";
 import { formatCurrency } from "@/Helpers/formatCurrency";
+import FormErrorSummary, { FormErrorItem } from "@/components/forms/FormErrorSummary";
 import type { PurchaseOrderDto } from "@/types/api";
 
 interface Props {
@@ -38,6 +39,7 @@ const SupplierBillModal: React.FC<Props> = ({ isOpen, order, onClose, onSuccess 
   );
   const [notes, setNotes] = useState("");
   const [rows, setRows] = useState<Record<string, BillRow>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!isOpen || !order) return;
@@ -77,10 +79,23 @@ const SupplierBillModal: React.FC<Props> = ({ isOpen, order, onClose, onSuccess 
 
   const submit = async () => {
     if (!order) return;
+    const nextErrors: Record<string, string> = {};
     if (!supplierInvoiceNumber.trim()) {
-      toast.error(isRTL ? "أدخل رقم فاتورة المورد" : "Enter the supplier invoice number");
-      return;
+      nextErrors.supplierInvoiceNumber = isRTL
+        ? "رقم فاتورة المورد مطلوب"
+        : "Supplier invoice number is required";
     }
+    if (!issueDate) {
+      nextErrors.issueDate = isRTL ? "تاريخ الفاتورة مطلوب" : "Invoice date is required";
+    }
+    if (!dueDate) {
+      nextErrors.dueDate = isRTL ? "تاريخ الاستحقاق مطلوب" : "Due date is required";
+    } else if (issueDate && new Date(dueDate) < new Date(issueDate)) {
+      nextErrors.dueDate = isRTL
+        ? "الاستحقاق يجب أن يكون بعد تاريخ الفاتورة"
+        : "Due date must be on or after the invoice date";
+    }
+
     const items = billableItems
       .map((item) => ({
         item,
@@ -96,7 +111,19 @@ const SupplierBillModal: React.FC<Props> = ({ isOpen, order, onClose, onSuccess 
       }));
 
     if (items.length === 0) {
-      toast.error(isRTL ? "أدخل كميات للفاتورة" : "Enter billed quantities");
+      nextErrors.items = isRTL
+        ? "أدخل كمية واحدة على الأقل"
+        : "Enter at least one billed quantity";
+    }
+    if (items.some((item) => item.quantity < 0 || item.unitPrice < 0)) {
+      nextErrors.items = isRTL
+        ? "الكميات والأسعار يجب ألا تكون سالبة"
+        : "Quantities and prices cannot be negative";
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      toast.error(isRTL ? "راجع الحقول المطلوبة" : "Review the highlighted fields");
       return;
     }
 
@@ -122,6 +149,10 @@ const SupplierBillModal: React.FC<Props> = ({ isOpen, order, onClose, onSuccess 
     }
   };
 
+  const errorSummary: FormErrorItem[] = Object.entries(errors).map(
+    ([field, message]) => ({ field, message })
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-4xl">
@@ -134,15 +165,24 @@ const SupplierBillModal: React.FC<Props> = ({ isOpen, order, onClose, onSuccess 
         </DialogHeader>
 
         <div className="space-y-5">
+          <FormErrorSummary errors={errorSummary} />
           <div className="grid gap-4 sm:grid-cols-[1.4fr_1fr_1fr]">
             <div className="space-y-1.5">
               <Label>{isRTL ? "رقم فاتورة المورد" : "Supplier invoice number"} *</Label>
               <Input
                 value={supplierInvoiceNumber}
-                onChange={(e) => setSupplierInvoiceNumber(e.target.value)}
+                onChange={(e) => {
+                  setSupplierInvoiceNumber(e.target.value);
+                  setErrors((prev) => ({ ...prev, supplierInvoiceNumber: "" }));
+                }}
                 placeholder={isRTL ? "مثال: INV-9042" : "e.g. INV-9042"}
                 aria-label={isRTL ? "رقم فاتورة المورد" : "Supplier invoice number"}
+                aria-invalid={!!errors.supplierInvoiceNumber}
+                className={errors.supplierInvoiceNumber ? "border-rose-300 dark:border-rose-700" : ""}
               />
+              {errors.supplierInvoiceNumber && (
+                <p className="text-xs text-rose-600">{errors.supplierInvoiceNumber}</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>{isRTL ? "تاريخ الفاتورة" : "Invoice date"}</Label>
@@ -151,7 +191,10 @@ const SupplierBillModal: React.FC<Props> = ({ isOpen, order, onClose, onSuccess 
                 value={issueDate}
                 onChange={(e) => setIssueDate(e.target.value)}
                 aria-label={isRTL ? "تاريخ الفاتورة" : "Invoice date"}
+                aria-invalid={!!errors.issueDate}
+                className={errors.issueDate ? "border-rose-300 dark:border-rose-700" : ""}
               />
+              {errors.issueDate && <p className="text-xs text-rose-600">{errors.issueDate}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>{isRTL ? "تاريخ الاستحقاق" : "Due date"}</Label>
@@ -160,7 +203,10 @@ const SupplierBillModal: React.FC<Props> = ({ isOpen, order, onClose, onSuccess 
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 aria-label={isRTL ? "تاريخ الاستحقاق" : "Due date"}
+                aria-invalid={!!errors.dueDate}
+                className={errors.dueDate ? "border-rose-300 dark:border-rose-700" : ""}
               />
+              {errors.dueDate && <p className="text-xs text-rose-600">{errors.dueDate}</p>}
             </div>
           </div>
 

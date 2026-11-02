@@ -25,6 +25,7 @@ import {
 } from "@/hooks/useGoodsReceipts";
 import { usePurchaseOrder, usePurchaseOrders } from "@/hooks/usePurchaseOrders";
 import { formatCurrency } from "@/Helpers/formatCurrency";
+import FormErrorSummary, { FormErrorItem } from "@/components/forms/FormErrorSummary";
 import type { PurchaseOrderDto } from "@/types/api";
 
 interface Props {
@@ -64,6 +65,7 @@ const GoodsReceiptModal: React.FC<Props> = ({
   const [notes, setNotes] = useState("");
   const [postNow, setPostNow] = useState(true);
   const [quantities, setQuantities] = useState<Record<string, Quantity>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { data: detailResponse } = usePurchaseOrder(orderId || undefined);
   const selectedOrder: PurchaseOrderDto | undefined = order
@@ -112,20 +114,38 @@ const GoodsReceiptModal: React.FC<Props> = ({
     }));
 
   const submit = async () => {
+    const nextErrors: Record<string, string> = {};
     if (!selectedOrder) {
-      toast.error(isRTL ? "اختر أمر الشراء" : "Select a purchase order");
-      return;
+      nextErrors.orderId = isRTL ? "اختر أمر الشراء" : "Choose a purchase order";
     }
-    const lines = selectedOrder.items
-      .map((item) => ({
-        purchaseOrderItemId: item.id,
-        receivedQuantity: quantities[item.id]?.received || 0,
-        rejectedQuantity: quantities[item.id]?.rejected || 0,
-      }))
-      .filter((line) => line.receivedQuantity > 0 || line.rejectedQuantity > 0);
+    if (!receivedDate) {
+      nextErrors.receivedDate = isRTL ? "تاريخ الاستلام مطلوب" : "Received date is required";
+    }
+
+    const lines = selectedOrder
+      ? selectedOrder.items
+          .map((item) => ({
+            purchaseOrderItemId: item.id,
+            receivedQuantity: quantities[item.id]?.received || 0,
+            rejectedQuantity: quantities[item.id]?.rejected || 0,
+          }))
+          .filter((line) => line.receivedQuantity > 0 || line.rejectedQuantity > 0)
+      : [];
 
     if (lines.length === 0) {
-      toast.error(isRTL ? "أدخل كميات مستلمة" : "Enter received quantities");
+      nextErrors.items = isRTL
+        ? "أدخل كمية مستلمة أو مرفوضة واحدة على الأقل"
+        : "Enter at least one received or rejected quantity";
+    }
+    if (lines.some((line) => line.receivedQuantity < 0 || line.rejectedQuantity < 0)) {
+      nextErrors.items = isRTL
+        ? "الكميات يجب ألا تكون سالبة"
+        : "Quantities cannot be negative";
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0 || !selectedOrder) {
+      toast.error(isRTL ? "راجع الحقول المطلوبة" : "Review the highlighted fields");
       return;
     }
 
@@ -153,6 +173,10 @@ const GoodsReceiptModal: React.FC<Props> = ({
     }
   };
 
+  const errorSummary: FormErrorItem[] = Object.entries(errors).map(
+    ([field, message]) => ({ field, message })
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
@@ -164,6 +188,7 @@ const GoodsReceiptModal: React.FC<Props> = ({
         </DialogHeader>
 
         <div className="space-y-5">
+          <FormErrorSummary errors={errorSummary} />
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>{isRTL ? "أمر الشراء" : "Purchase order"} *</Label>
@@ -172,8 +197,8 @@ const GoodsReceiptModal: React.FC<Props> = ({
                   {order.poNumber} — {order.supplierName}
                 </p>
               ) : (
-                <Select value={orderId} onValueChange={setOrderId}>
-                  <SelectTrigger aria-label={isRTL ? "أمر الشراء" : "Purchase order"}>
+                <Select value={orderId} onValueChange={(value) => { setOrderId(value); setErrors((prev) => ({ ...prev, orderId: "" })); }}>
+                  <SelectTrigger aria-label={isRTL ? "أمر الشراء" : "Purchase order"} aria-invalid={!!errors.orderId} className={errors.orderId ? "border-rose-300 dark:border-rose-700" : ""}>
                     <SelectValue placeholder={isRTL ? "اختر أمر الشراء" : "Select order"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -191,8 +216,10 @@ const GoodsReceiptModal: React.FC<Props> = ({
               <Input
                 type="date"
                 value={receivedDate}
-                onChange={(e) => setReceivedDate(e.target.value)}
+                onChange={(e) => { setReceivedDate(e.target.value); setErrors((prev) => ({ ...prev, receivedDate: "" })); }}
                 aria-label={isRTL ? "تاريخ الاستلام" : "Received date"}
+                aria-invalid={!!errors.receivedDate}
+                className={errors.receivedDate ? "border-rose-300 dark:border-rose-700" : ""}
               />
             </div>
           </div>
