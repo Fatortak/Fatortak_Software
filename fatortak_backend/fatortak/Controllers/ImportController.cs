@@ -18,6 +18,26 @@ namespace fatortak.Controllers
             _service = service;
         }
 
+        [HttpPost("preview")]
+        [RequestSizeLimit(10 * 1024 * 1024)]
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<ServiceResult<ImportPreviewDto>>> Preview(
+            [FromForm] IFormFile file,
+            [FromForm] string entityType = "customers",
+            [FromForm] bool isSupplier = false)
+        {
+            var result = await _service.PreviewAsync(file, entityType, isSupplier);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpPost("execute")]
+        public async Task<ActionResult<ServiceResult<ImportResultDto>>> Execute(
+            [FromBody] ImportExecuteDto dto)
+        {
+            var result = await _service.ExecuteAsync(dto);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [HttpPost("customers")]
         public async Task<ActionResult<ServiceResult<ImportResultDto>>> Customers(
             [FromBody] CsvImportDto dto)

@@ -1866,3 +1866,45 @@ export interface DemoDataResultDto {
   quotations: number;
   message: string;
 }
+
+// Import wizard DTOs
+export interface ImportColumnDto {
+  key: string;
+  label: string;
+  samples: string[];
+}
+
+export interface ImportPreviewRowDto {
+  row: number;
+  values: Record<string, string>;
+  errors: string[];
+  duplicate: boolean;
+}
+
+export interface ImportPreviewDto {
+  entityType: string;
+  format: string;
+  fileName?: string;
+  sheets: string[];
+  selectedSheet?: string;
+  columns: ImportColumnDto[];
+  suggestedMapping: Record<string, string>;
+  rows: ImportPreviewRowDto[];
+  totalRows: number;
+  validRows: number;
+  errorRows: number;
+  duplicateRows: number;
+  warnings: string[];
+}
+
+export interface ImportExecuteRowDto {
+  row: number;
+  values: Record<string, string>;
+}
+
+export interface ImportExecuteDto {
+  entityType: string;
+  isSupplier: boolean;
+  mapping: Record<string, string>;
+  rows: ImportExecuteRowDto[];
+}
