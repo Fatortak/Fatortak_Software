@@ -247,6 +247,12 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
 - 2026-11-01: CSP/Permissions-Policy headers added to Nginx and PII inventory/retention review documented in `docs/security/csp-and-pii-review.md`.
 - 2026-11-01: vulnerable NuGet packages upgraded (`Microsoft.Data.SqlClient` 5.2.2, `Azure.Identity` 1.13.1, `System.Formats.Asn1` 8.0.1, `SQLitePCLRaw.lib.e_sqlite3` latest) and `jspdf` upgraded to 4.2.1; projects now report no vulnerable packages and no high/critical npm advisories.
 - 2026-11-01: backend `dotnet test` 10/10 and frontend `npm test` 7/7 after dependency upgrades; production build succeeds.
+- 2026-11-02: navigation grouped into Overview, Sales, Purchasing, Finance, Inventory & Data, Contacts & Projects, Reports & Templates, and Workspace, with collapsible groups and active-group expansion.
+- 2026-11-02: shared form UX primitives (`FormField`, `FormErrorSummary`, validation helpers) and stronger validation for quotations, price lists, purchase orders, recurring invoices and customers.
+- 2026-11-02: reports hub redesigned by group with search and tax report entry; every report now exports CSV and PDF from the live table data.
+- 2026-11-02: invoice templates redesigned as a live-preview gallery with brand-colour selection, full preview page, print action, current-template indicators and a template shortcut from invoice details.
+- 2026-11-02: import rebuilt as a three-step wizard supporting CSV/TSV/Excel (.xlsx), competitor header aliases, automatic column mapping, row-level validation preview, duplicate detection, and the existing templates/downloads.
+- 2026-11-02: verified report CSV/PDF downloads, template preview, import preview/execute for both competitor CSV and Excel, and validation summaries in the browser; frontend typecheck passes.
 
 ## Remaining work
 

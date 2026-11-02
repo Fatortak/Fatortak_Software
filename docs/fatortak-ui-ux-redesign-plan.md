@@ -42,7 +42,11 @@ Shipped in the current rollout:
 - Global search: Ctrl/Cmd+K command palette and `/api/search` across customers, suppliers, items, invoices, quotations, purchase orders and projects.
 - Document history: revision snapshots and change sets for invoices, quotations and purchase orders.
 - Sessions and devices: `/sessions` device history, current-device marker, revoke-one and sign-out-others.
-- Data operations: `/data-import` CSV import for customers/suppliers/items, bulk customer actions (item bulk APIs available) and saved activity views.
+- Data operations: `/data-import` three-step CSV/TSV/Excel import wizard with competitor header aliases, automatic column mapping, validation preview, duplicate detection, bulk customer actions (item bulk APIs available) and saved activity views.
+- Navigation: workflow-based sidebar groups with collapsible sections and active-group expansion.
+- Form UX: shared required markers, inline errors, error summaries, date-range and line-item validation across the core document modals.
+- Reports: grouped reports hub with search, tax report entry and working CSV/PDF export on every report.
+- Invoice templates: live-preview gallery, brand colours, full preview/print page and current-template indicators.
 - Onboarding: `/onboarding` checklist with progress and an idempotent demo dataset.
 - Stakeholder statements: CSV export from the stakeholders page.
 
