@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import * as Yup from "yup";
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
+import BrandLogo from "../components/BrandLogo";
 import { registrationService } from "../services/registrationService";
 import { unwrapServiceResult } from "../services/api";
 import {
@@ -135,11 +136,7 @@ const Login: React.FC = () => {
           <div className={`space-y-6 ${isRTL ? "text-end" : "text-start"}`}>
             {/* Logo */}
             <div>
-              <img
-                src="/lovable-uploads/fatortak-logo.png"
-                alt="FATORTAK"
-                className="h-9 w-auto object-contain dark:brightness-0 dark:invert"
-              />
+              <BrandLogo imgClassName="h-9" />
               <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">
                 {t("businessManagement")}
               </p>
@@ -193,11 +190,7 @@ const Login: React.FC = () => {
           <div className="w-full max-w-md">
             {/* Mobile Logo */}
             <div className="mb-8 flex flex-col items-center lg:hidden">
-              <img
-                src="/lovable-uploads/fatortak-logo.png"
-                alt="FATORTAK"
-                className="h-9 w-auto object-contain dark:brightness-0 dark:invert"
-              />
+              <BrandLogo imgClassName="h-9" />
               <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">
                 {t("businessManagement")}
               </p>

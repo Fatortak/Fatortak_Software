@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
+import BrandLogo from "../BrandLogo";
 import { toast } from "react-toastify";
 
 interface ModernSidebarProps {
@@ -605,11 +606,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
                 F
               </div>
             ) : (
-              <img
-                src="/lovable-uploads/fatortak-logo.png"
-                alt="FATORTAK"
-                className="h-8 w-auto max-w-[180px] object-contain dark:brightness-0 dark:invert"
-              />
+              <BrandLogo imgClassName="max-w-[180px]" />
             )}
           </div>
 

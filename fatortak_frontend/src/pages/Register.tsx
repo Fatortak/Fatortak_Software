@@ -32,6 +32,7 @@ import FormField from "@/components/forms/FormField";
 import FormErrorSummary from "@/components/forms/FormErrorSummary";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import BrandLogo from "@/components/BrandLogo";
 import { registrationService } from "@/services/registrationService";
 import { unwrapServiceResult } from "@/services/api";
 
@@ -622,11 +623,7 @@ const Register: React.FC = () => {
       <div className="border-b border-slate-200/80 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link to="/login" className="flex items-center gap-3">
-            <img
-              src="/lovable-uploads/fatortak-logo.png"
-              alt="FATORTAK"
-              className="h-8 w-auto object-contain dark:brightness-0 dark:invert"
-            />
+            <BrandLogo />
           </Link>
           <div className="flex items-center gap-2">
             <button
@@ -1351,11 +1348,9 @@ const RegistrationMessage: React.FC<{
     style={{ minHeight: "100dvh" }}
   >
     <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-7 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <img
-        src="/lovable-uploads/fatortak-logo.png"
-        alt="FATORTAK"
-        className="mx-auto h-8 w-auto object-contain dark:brightness-0 dark:invert"
-      />
+      <div className="flex justify-center">
+        <BrandLogo />
+      </div>
       <div className="mx-auto mt-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
         <Icon className="h-6 w-6" />
       </div>

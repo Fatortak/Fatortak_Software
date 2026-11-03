@@ -21,6 +21,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import BrandLogo from "@/components/BrandLogo";
 import { useCurrentUserProfile } from "../../hooks/useUserProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
@@ -147,11 +148,7 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({
 
           {/* Center Section - Logo for mobile */}
           <div className="lg:hidden">
-            <img
-              src="/lovable-uploads/fatortak-logo.png"
-              alt="FATORTAK"
-              className="h-8 w-auto object-contain dark:brightness-0 dark:invert"
-            />
+            <BrandLogo />
           </div>
 
           {/* Right Section - Theme, Language, Notifications, Profile */}
