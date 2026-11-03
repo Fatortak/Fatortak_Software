@@ -85,19 +85,47 @@ const formatDate = (value?: string | null) => {
   }).format(date);
 };
 
-const relativeTime = (value?: string | null) => {
+const relativeTime = (value?: string | null, isRTL = false) => {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
   const diff = Date.now() - date.getTime();
   const minutes = Math.round(diff / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 1) return isRTL ? "الآن" : "just now";
+  if (minutes < 60) return isRTL ? `${minutes} د` : `${minutes}m ago`;
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return isRTL ? `${hours} س` : `${hours}h ago`;
   const days = Math.round(hours / 24);
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return isRTL ? `${days} ي` : `${days}d ago`;
   return formatDate(value);
+};
+
+const translateAction = (action: string, isRTL: boolean) => {
+  if (!isRTL) return action;
+  const labels: Record<string, string> = {
+    Added: "أضاف",
+    Modified: "عدّل",
+    Deleted: "حذف",
+    Suspended: "علّق",
+    Activated: "فعّل",
+    Deactivated: "عطّل",
+    RoleChanged: "غيّر الدور",
+  };
+  return labels[action] ?? action;
+};
+
+const translateEntity = (entityType: string, isRTL: boolean) => {
+  if (!isRTL) return entityType;
+  const labels: Record<string, string> = {
+    Tenant: "مساحة العمل",
+    User: "المستخدم",
+    Invoice: "فاتورة",
+    Customer: "عميل",
+    Item: "صنف",
+    Company: "شركة",
+    Account: "حساب",
+  };
+  return labels[entityType] ?? entityType;
 };
 
 const useDebouncedValue = <T,>(value: T, delay = 350) => {
@@ -733,7 +761,7 @@ const PlatformConsole: React.FC = () => {
                         <TableCell className="text-end tabular-nums">{tenant.customerCount}</TableCell>
                         <TableCell className="text-end tabular-nums">{tenant.itemCount}</TableCell>
                         <TableCell className="text-xs text-slate-500 dark:text-slate-400">
-                          {relativeTime(tenant.lastActivityAt)}
+                          {relativeTime(tenant.lastActivityAt, isRTL)}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-end gap-2">
@@ -974,7 +1002,7 @@ const PlatformConsole: React.FC = () => {
                             )}
                           </TableCell>
                           <TableCell className="text-xs text-slate-500 dark:text-slate-400">
-                            {relativeTime(account.lastSeenAt || account.lastLoginAt)}
+                            {relativeTime(account.lastSeenAt || account.lastLoginAt, isRTL)}
                           </TableCell>
                           <TableCell>
                             <Badge variant={account.isActive ? "success" : "destructive"}>
@@ -1100,16 +1128,20 @@ const ActivityFeed: React.FC<{
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-sm text-slate-800 dark:text-slate-100">
-              <span className="font-semibold">{item.userName || "System"}</span>{" "}
-              <span className="text-slate-500 dark:text-slate-400">{item.action}</span>{" "}
-              <span className="font-medium">{item.entityType}</span>
+              <span className="font-semibold">
+                {item.userName || (isRTL ? "النظام" : "System")}
+              </span>{" "}
+              <span className="text-slate-500 dark:text-slate-400">
+                {translateAction(item.action, isRTL)}
+              </span>{" "}
+              <span className="font-medium">{translateEntity(item.entityType, isRTL)}</span>
               {item.entityLabel ? ` · ${item.entityLabel}` : ""}
             </p>
             <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400">
               <Globe className="h-3 w-3" />
               {item.tenantName || (isRTL ? "النظام" : "System")}
               <span>·</span>
-              {relativeTime(item.createdAt)}
+              {relativeTime(item.createdAt, isRTL)}
             </p>
           </div>
         </div>
