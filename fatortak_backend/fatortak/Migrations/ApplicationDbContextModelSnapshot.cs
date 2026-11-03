@@ -3255,12 +3255,17 @@ namespace fatortak.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Subdomain")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Subdomain")
+                        .IsUnique()
+                        .HasFilter("[Subdomain] IS NOT NULL");
 
                     b.ToTable("Tenants", "dbo");
                 });

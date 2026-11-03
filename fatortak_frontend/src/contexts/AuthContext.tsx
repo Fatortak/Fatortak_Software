@@ -95,6 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Check if the request was successful
       if (result.success && result.data) {
+        queryClient.clear();
         const { user: userData, tenant: tenantData } = result.data;
 
         localStorage.setItem("user_data", JSON.stringify(userData));

@@ -5,6 +5,7 @@ using fatortak.Services.Deployment;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
+using System.Security.Claims;
 
 namespace fatortak.Middlewares
 {
@@ -55,6 +56,19 @@ namespace fatortak.Middlewares
             if (user == null)
             {
                 await RejectAsync(context, StatusCodes.Status401Unauthorized, "User is not active.");
+                return;
+            }
+
+            // Authorization roles come from the JWT. If an owner or admin
+            // changes a role, the old token must not keep the old privileges.
+            var tokenRole = context.User.FindFirst(ClaimTypes.Role)?.Value;
+            if (!string.IsNullOrWhiteSpace(tokenRole) &&
+                !string.Equals(tokenRole, user.Role, StringComparison.OrdinalIgnoreCase))
+            {
+                await RejectAsync(
+                    context,
+                    StatusCodes.Status401Unauthorized,
+                    "Your permissions changed. Sign in again.");
                 return;
             }
 

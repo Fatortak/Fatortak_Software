@@ -12,7 +12,9 @@ namespace fatortak.Dtos.Auth
         public string? PhoneNumber { get; set; }
         public string CompanyName { get; set; }
         public string? Address { get; set; }
+        public string? Country { get; set; }
         public string Currency { get; set; }
+        public bool AcceptedTerms { get; set; }
         public string? Role { get; set; } = RoleEnum.Admin.ToString();
     }
 }

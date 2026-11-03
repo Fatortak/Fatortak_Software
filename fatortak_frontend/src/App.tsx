@@ -62,6 +62,7 @@ import PublicInvoicePage from "./pages/PublicInvoicePage";
 import Notifications from "./pages/Notifications";
 import Register from "./pages/Register";
 import Welcome from "./pages/Welcome";
+import PlatformConsole from "./pages/PlatformConsole";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Employees from "./pages/Employees";
@@ -214,6 +215,7 @@ function AppContent() {
           <Route path="onboarding" element={<Onboarding />} />
           <Route path="data-import" element={<DataImport />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="platform" element={<PlatformConsole />} />
           <Route path="installation" element={<InstallationInsights />} />
           <Route path="employees" element={<Employees />} />
           <Route path="departments" element={<Departments />} />

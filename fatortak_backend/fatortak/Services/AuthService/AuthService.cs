@@ -1,7 +1,9 @@
-﻿using fatortak.Common.Enum;
+﻿using fatortak.Common;
+using fatortak.Common.Enum;
 using fatortak.Context;
 using fatortak.Dtos.Auth;
 using fatortak.Dtos.Company;
+using fatortak.Dtos.Platform;
 using fatortak.Dtos.Shared;
 using fatortak.Entities;
 using fatortak.Services.Deployment;
@@ -29,6 +31,7 @@ namespace fatortak.Services.AuthService
         private readonly ApplicationDbContext _context;
         private readonly IDeploymentMode _deployment;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IConfiguration _configuration;
 
         public AuthService(
             UserManager<ApplicationUser> userManager,
@@ -40,7 +43,8 @@ namespace fatortak.Services.AuthService
             ApplicationDbContext context,
             IEmailService emailServices,
             IDeploymentMode deployment,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -52,6 +56,7 @@ namespace fatortak.Services.AuthService
             _emailServices = emailServices;
             _deployment = deployment;
             _httpContextAccessor = httpContextAccessor;
+            _configuration = configuration;
         }
 
         private async Task<UserSession?> CreateSessionAsync(ApplicationUser user, Guid? tenantId)
@@ -123,6 +128,10 @@ namespace fatortak.Services.AuthService
                 if (!validationResult.Success)
                     return validationResult;
 
+                if (!_deployment.AllowRegistration)
+                    return ServiceResult<AuthResponseDto>.Failure(
+                        "Registration is disabled on this installation. Ask an administrator to create your account.");
+
                 // 2. Check for Existing User
                 var existingUser = await _userManager.FindByEmailAsync(dto.Email);
                 if (existingUser != null)
@@ -135,17 +144,35 @@ namespace fatortak.Services.AuthService
                         .OrderBy(t => t.CreatedAt)
                         .FirstOrDefaultAsync();
 
-                    if (selfHostedTenant != null && !_deployment.AllowRegistration)
+                    if (selfHostedTenant == null)
                         return ServiceResult<AuthResponseDto>.Failure(
-                            "Registration is disabled on this self-hosted installation. Ask an administrator to create your account.");
+                            "This installation is not ready for registration yet. Ask an administrator to finish setup.");
                 }
 
-                // 3. Check subdomain uniqueness (moved from TenantService to avoid duplication)
-                if (!string.IsNullOrEmpty(dto.Subdomain))
+                // 3. Normalize and validate the workspace subdomain (multi-tenant only).
+                string? normalizedSubdomain = null;
+                if (!_deployment.IsSelfHosted)
                 {
-                    var subdomainExists = await _context.Tenants.AnyAsync(t => t.Subdomain == dto.Subdomain);
-                    if (subdomainExists)
-                        return ServiceResult<AuthResponseDto>.Failure("Subdomain already taken");
+                    if (string.IsNullOrWhiteSpace(dto.Subdomain))
+                        return ServiceResult<AuthResponseDto>.Failure(
+                            "Choose a workspace URL. It becomes your team's address, for example acme.");
+
+                    var subdomainResult = await CheckSubdomainAsync(dto.Subdomain);
+                    if (!subdomainResult.Success || subdomainResult.Data is not { Available: true })
+                    {
+                        return ServiceResult<AuthResponseDto>.Failure(
+                            subdomainResult.Data?.Reason ??
+                            subdomainResult.ErrorMessage ??
+                            "That workspace URL is not available.");
+                    }
+
+                    normalizedSubdomain = subdomainResult.Data.Value;
+                    dto.Subdomain = normalizedSubdomain;
+                }
+                else
+                {
+                    // The installation tenant owns its URL; ignore anything sent by the client.
+                    dto.Subdomain = null;
                 }
 
                 // 4. Create User Account
@@ -257,10 +284,11 @@ namespace fatortak.Services.AuthService
         {
             var user = new ApplicationUser
             {
-                UserName = dto.Email,
-                Email = dto.Email,
-                FirstName = dto.FirstName,
-                LastName = dto.LastName,
+                UserName = dto.Email.Trim(),
+                Email = dto.Email.Trim(),
+                FirstName = dto.FirstName.Trim(),
+                LastName = dto.LastName.Trim(),
+                PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? null : dto.PhoneNumber.Trim(),
                 EmailConfirmed = false, // Require email confirmation
                 IsActive = true,
                 Role = RoleEnum.Admin.ToString()
@@ -283,8 +311,8 @@ namespace fatortak.Services.AuthService
             {
                 var tenant = new Tenant
                 {
-                    Name = dto.CompanyName,
-                    Subdomain = dto?.Subdomain ?? null,
+                    Name = dto.CompanyName.Trim(),
+                    Subdomain = dto.Subdomain,
                     IsActive = true
                 };
 
@@ -314,6 +342,13 @@ namespace fatortak.Services.AuthService
 
                 return ServiceResult<Tenant>.SuccessResult(tenant);
             }
+            catch (DbUpdateException ex) when (
+                ex.InnerException?.Message.Contains("IX_Tenants_Subdomain", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                _logger.LogWarning(ex, "Subdomain race detected while creating tenant");
+                return ServiceResult<Tenant>.Failure(
+                    "That workspace URL was just taken. Choose another one.");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating tenant");
@@ -328,11 +363,11 @@ namespace fatortak.Services.AuthService
                 var company = new Company
                 {
                     TenantId = tenantId,
-                    Name = dto.CompanyName,
-                    Email = dto.Email,
-                    Phone = dto.PhoneNumber ?? string.Empty,
-                    Address = dto.Address ?? string.Empty,
-                    Currency = dto.Currency,
+                    Name = dto.CompanyName.Trim(),
+                    Email = dto.Email.Trim(),
+                    Phone = dto.PhoneNumber?.Trim() ?? string.Empty,
+                    Address = dto.Address?.Trim() ?? string.Empty,
+                    Currency = dto.Currency.Trim(),
                     DefaultVatRate = 0.2m,
                     InvoicePrefix = "INV-",
                     IsActive = true
@@ -361,7 +396,8 @@ namespace fatortak.Services.AuthService
                     TenantId = tenantId,
                     Plan = SubscriptionPlan.Trial,
                     StartDate = DateTime.Now,
-                    EndDate = DateTime.Now.AddDays(14),
+                    EndDate = DateTime.Now.AddDays(
+                        _configuration.GetValue("Subscriptions:TrialDays", 14)),
                     IsYearly = false,
                     AiUsageThisMonth = 0,
                     AiUsageResetDate = null
@@ -538,6 +574,8 @@ namespace fatortak.Services.AuthService
             if (string.IsNullOrWhiteSpace(dto.Email))
                 return ServiceResult<AuthResponseDto>.Failure("Email is required");
 
+            dto.Email = dto.Email.Trim();
+
             if (!new EmailAddressAttribute().IsValid(dto.Email))
                 return ServiceResult<AuthResponseDto>.Failure("Invalid email format");
 
@@ -554,10 +592,149 @@ namespace fatortak.Services.AuthService
                     "Password must be at least 12 characters and include upper case, lower case, a number and a symbol.");
             }
 
-            if (string.IsNullOrWhiteSpace(dto.CompanyName))
+            if (string.IsNullOrWhiteSpace(dto.FirstName) || dto.FirstName.Trim().Length < 2)
+                return ServiceResult<AuthResponseDto>.Failure("First name is required");
+
+            if (dto.FirstName.Trim().Length > 100)
+                return ServiceResult<AuthResponseDto>.Failure("First name must be 100 characters or fewer");
+
+            if (string.IsNullOrWhiteSpace(dto.LastName) || dto.LastName.Trim().Length < 2)
+                return ServiceResult<AuthResponseDto>.Failure("Last name is required");
+
+            if (dto.LastName.Trim().Length > 100)
+                return ServiceResult<AuthResponseDto>.Failure("Last name must be 100 characters or fewer");
+
+            if (string.IsNullOrWhiteSpace(dto.CompanyName) || dto.CompanyName.Trim().Length < 2)
                 return ServiceResult<AuthResponseDto>.Failure("Company name is required");
 
+            if (dto.CompanyName.Trim().Length > 200)
+                return ServiceResult<AuthResponseDto>.Failure("Company name must be 200 characters or fewer");
+
+            if (string.IsNullOrWhiteSpace(dto.Currency))
+                return ServiceResult<AuthResponseDto>.Failure("Currency is required");
+
+            if (dto.Currency.Trim().Length > 10)
+                return ServiceResult<AuthResponseDto>.Failure("Currency must be 10 characters or fewer");
+
+            if (!string.IsNullOrWhiteSpace(dto.Country) && dto.Country.Trim().Length > 100)
+                return ServiceResult<AuthResponseDto>.Failure("Country must be 100 characters or fewer");
+
+            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber) && dto.PhoneNumber.Trim().Length > 30)
+                return ServiceResult<AuthResponseDto>.Failure("Phone number must be 30 characters or fewer");
+
+            if (!string.IsNullOrWhiteSpace(dto.Address) && dto.Address.Trim().Length > 500)
+                return ServiceResult<AuthResponseDto>.Failure("Address must be 500 characters or fewer");
+
+            if (!dto.AcceptedTerms)
+                return ServiceResult<AuthResponseDto>.Failure(
+                    "Accept the terms of service and privacy policy to create your workspace.");
+
             return ServiceResult<AuthResponseDto>.SuccessResult(null);
+        }
+
+        public async Task<ServiceResult<SubdomainAvailabilityDto>> CheckSubdomainAsync(string value)
+        {
+            var normalized = NormalizeSubdomain(value);
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                return ServiceResult<SubdomainAvailabilityDto>.SuccessResult(
+                    new SubdomainAvailabilityDto
+                    {
+                        Value = string.Empty,
+                        Available = false,
+                        Reason = "Choose a workspace URL using lowercase letters, numbers and hyphens."
+                    });
+            }
+
+            var formatError = GetSubdomainFormatError(normalized);
+            if (formatError != null)
+            {
+                return ServiceResult<SubdomainAvailabilityDto>.SuccessResult(
+                    new SubdomainAvailabilityDto
+                    {
+                        Value = normalized,
+                        Available = false,
+                        Reason = formatError,
+                        Suggestion = await SuggestSubdomainAsync(normalized)
+                    });
+            }
+
+            if (SubdomainRules.IsReserved(normalized))
+            {
+                return ServiceResult<SubdomainAvailabilityDto>.SuccessResult(
+                    new SubdomainAvailabilityDto
+                    {
+                        Value = normalized,
+                        Available = false,
+                        Reason = "That workspace URL is reserved by the platform.",
+                        Suggestion = await SuggestSubdomainAsync(normalized)
+                    });
+            }
+
+            var taken = await _context.Tenants.AnyAsync(t =>
+                t.Subdomain != null && t.Subdomain.ToLower() == normalized);
+            if (taken)
+            {
+                return ServiceResult<SubdomainAvailabilityDto>.SuccessResult(
+                    new SubdomainAvailabilityDto
+                    {
+                        Value = normalized,
+                        Available = false,
+                        Reason = "That workspace URL is already taken.",
+                        Suggestion = await SuggestSubdomainAsync(normalized)
+                    });
+            }
+
+            return ServiceResult<SubdomainAvailabilityDto>.SuccessResult(
+                new SubdomainAvailabilityDto
+                {
+                    Value = normalized,
+                    Available = true
+                });
+        }
+
+        private static string NormalizeSubdomain(string? value) =>
+            SubdomainRules.Normalize(value);
+
+        private static string? GetSubdomainFormatError(string normalized) =>
+            SubdomainRules.GetFormatError(normalized);
+
+        private async Task<string?> SuggestSubdomainAsync(string candidate)
+        {
+            var baseCandidate = candidate.Length > SubdomainRules.MaxLength - 4
+                ? candidate[..(SubdomainRules.MaxLength - 4)]
+                : candidate;
+            baseCandidate = baseCandidate.Trim('-');
+            if (string.IsNullOrWhiteSpace(baseCandidate)) baseCandidate = "workspace";
+
+            foreach (var suffix in new[] { "-hq", "-team", "-app", "-1" })
+            {
+                var suggestion = $"{baseCandidate}{suffix}";
+                if (suggestion.Length > SubdomainRules.MaxLength)
+                    suggestion = suggestion[..SubdomainRules.MaxLength].TrimEnd('-');
+                var taken = await _context.Tenants.AnyAsync(t =>
+                    t.Subdomain != null && t.Subdomain.ToLower() == suggestion);
+                if (!taken && !SubdomainRules.IsReserved(suggestion))
+                    return suggestion;
+            }
+
+            var random = new Random();
+            for (var attempt = 0; attempt < 8; attempt++)
+            {
+                var suffix = $"-{random.Next(10, 99)}";
+                var prefixLength = Math.Max(1, SubdomainRules.MaxLength - suffix.Length);
+                var prefix = baseCandidate.Length > prefixLength
+                    ? baseCandidate[..prefixLength].TrimEnd('-')
+                    : baseCandidate;
+                var suggestion = $"{prefix}{suffix}";
+                if (suggestion.Length < SubdomainRules.MinLength) continue;
+                var taken = await _context.Tenants.AnyAsync(t =>
+                    t.Subdomain != null && t.Subdomain.ToLower() == suggestion);
+                if (!taken && !SubdomainRules.IsReserved(suggestion))
+                    return suggestion;
+            }
+
+            return null;
         }
 
         // Helper methods

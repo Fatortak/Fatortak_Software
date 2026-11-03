@@ -13,7 +13,9 @@ namespace fatortak.Services.Deployment
             var mode = configuration["Deployment:Mode"];
             IsSelfHosted = string.Equals(mode, "SelfHosted", StringComparison.OrdinalIgnoreCase) ||
                            configuration.GetValue<bool>("SelfHosted:Enabled");
-            AllowRegistration = configuration.GetValue("SelfHosted:AllowRegistration", true);
+            AllowRegistration = IsSelfHosted
+                ? configuration.GetValue("SelfHosted:AllowRegistration", true)
+                : configuration.GetValue("MultiTenant:AllowRegistration", true);
         }
 
         public bool IsSelfHosted { get; }

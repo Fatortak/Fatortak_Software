@@ -2,7 +2,7 @@
 
 Status legend: `DONE` implemented and verified; `IN PROGRESS` being changed; `TODO` planned; `DEFERRED` requires product decision or external service.
 
-Last updated: 2026-11-01
+Last updated: 2026-11-03
 
 ## P0 — release blockers
 
@@ -253,6 +253,11 @@ The current system jumps from a draft invoice to a paid invoice. A professional 
 - 2026-11-02: invoice templates redesigned as a live-preview gallery with brand-colour selection, full preview page, print action, current-template indicators and a template shortcut from invoice details.
 - 2026-11-02: import rebuilt as a three-step wizard supporting CSV/TSV/Excel (.xlsx), competitor header aliases, automatic column mapping, row-level validation preview, duplicate detection, and the existing templates/downloads.
 - 2026-11-02: verified report CSV/PDF downloads, template preview, import preview/execute for both competitor CSV and Excel, and validation summaries in the browser; frontend typecheck passes.
+- 2026-11-03: multi-tenant self-registration rebuilt as a three-step wizard with live workspace-URL availability, reserved-name and format rules (3–30 lowercase letters/numbers/hyphens), password-strength guidance, terms acceptance and server-side validation; registration is hidden and `/register` is closed when `MultiTenant:AllowRegistration` is false.
+- 2026-11-03: added `SubdomainRules`, `GET /api/auth/registration-options`, `GET /api/auth/subdomain-availability`, normalized/case-insensitive uniqueness and a filtered unique index `IX_Tenants_Subdomain` (migration `20261102131057_AddTenantSubdomainIndex`).
+- 2026-11-03: added the SysAdmin-only `/platform` console with cross-tenant overview metrics, subscription mix, newest tenants, recent activity, tenant search/status filtering and suspend/activate controls, plus user search/tenant/role/status filtering, role assignment and account activation.
+- 2026-11-03: role changes now invalidate stale JWTs; the tenant middleware rejects requests whose token role no longer matches the database, forcing a fresh sign-in.
+- 2026-11-03: verified registration end to end (wizard → tenant/user/trial creation), platform metrics/tables/activity and role/status controls in Chromium, and confirmed registration is gated off when multi-tenant registration is disabled.
 
 ## Remaining work
 

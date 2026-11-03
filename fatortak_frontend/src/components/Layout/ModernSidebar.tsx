@@ -38,6 +38,7 @@ import {
   BadgePercent,
   Boxes,
   Contact,
+  Crown,
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -75,6 +76,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
   const { user, logout } = useAuth();
   const canViewInstallation =
     user?.role === "Admin" || user?.role === "SysAdmin";
+  const isSysAdmin = user?.role === "SysAdmin";
   const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({});
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     overview: true,
@@ -85,6 +87,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
     contacts: true,
     reporting: true,
     workspace: true,
+    platform: true,
   });
 
   const pathname = location.pathname;
@@ -102,6 +105,21 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({
         },
       ],
     },
+    ...(isSysAdmin
+      ? [
+          {
+            key: "platform",
+            label: isRTL ? "إدارة المنصة" : "Platform",
+            items: [
+              {
+                name: isRTL ? "لوحة المنصة" : "Platform console",
+                icon: Crown,
+                path: "/platform",
+              },
+            ],
+          },
+        ]
+      : []),
     {
       key: "sales",
       label: isRTL ? "المبيعات" : "Sales",

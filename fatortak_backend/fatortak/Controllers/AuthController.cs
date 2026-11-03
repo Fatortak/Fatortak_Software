@@ -1,6 +1,8 @@
 ﻿using fatortak.Dtos.Auth;
+using fatortak.Dtos.Platform;
 using fatortak.Dtos.Shared;
 using fatortak.Services.AuthService;
+using fatortak.Services.Deployment;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -16,15 +18,21 @@ namespace fatortak.Controllers
         private readonly IAuthService _authService;
         private readonly ILogger<AuthController> _logger;
         private readonly IWebHostEnvironment _environment;
+        private readonly IDeploymentMode _deployment;
+        private readonly IConfiguration _configuration;
 
         public AuthController(
             IAuthService authService,
             ILogger<AuthController> logger,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            IDeploymentMode deployment,
+            IConfiguration configuration)
         {
             _authService = authService;
             _logger = logger;
             _environment = environment;
+            _deployment = deployment;
+            _configuration = configuration;
         }
 
         private void SetAuthCookie(string? token)
@@ -44,6 +52,34 @@ namespace fatortak.Controllers
                 Expires = DateTimeOffset.UtcNow.AddDays(20),
                 IsEssential = true
             });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("registration-options")]
+        public ActionResult<ServiceResult<RegistrationOptionsDto>> RegistrationOptions()
+        {
+            var selfHosted = _deployment.IsSelfHosted;
+            var allowRegistration = selfHosted
+                ? _configuration.GetValue("SelfHosted:AllowRegistration", true)
+                : _configuration.GetValue("MultiTenant:AllowRegistration", true);
+
+            return Ok(ServiceResult<RegistrationOptionsDto>.SuccessResult(
+                new RegistrationOptionsDto
+                {
+                    Mode = selfHosted ? "SelfHosted" : "MultiTenant",
+                    AllowRegistration = allowRegistration,
+                    RequiresSubdomain = !selfHosted,
+                    TrialDays = _configuration.GetValue("Subscriptions:TrialDays", 14)
+                }));
+        }
+
+        [AllowAnonymous]
+        [HttpGet("subdomain-availability")]
+        public async Task<ActionResult<ServiceResult<SubdomainAvailabilityDto>>> SubdomainAvailability(
+            [FromQuery] string value)
+        {
+            var result = await _authService.CheckSubdomainAsync(value);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [AllowAnonymous]

@@ -738,4 +738,4 @@ Build/standardize in `src/components/ui`:
 - No page uses a one-off gradient, button, table or modal unless documented.
 - Dashboard, invoice, report and settings task completion improves in usability testing.
 
-Implementation status: foundation, core rollout, the full commercial document chain, audit, reconciliation, pricing, commissions, inventory, tax, global search, revisions, sessions, data operations and onboarding are in place. Remaining work is tracked in section 0 and in `IMPLEMENTATION_PLAN.md`.
+Implementation status: foundation, core rollout, the full commercial document chain, audit, reconciliation, pricing, commissions, inventory, tax, global search, revisions, sessions, data operations, onboarding, multi-tenant self-registration and the SysAdmin platform console are in place. Remaining work is tracked in section 0 and in `IMPLEMENTATION_PLAN.md`.

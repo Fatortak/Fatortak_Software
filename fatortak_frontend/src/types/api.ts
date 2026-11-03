@@ -1908,3 +1908,78 @@ export interface ImportExecuteDto {
   mapping: Record<string, string>;
   rows: ImportExecuteRowDto[];
 }
+
+// Registration and platform console DTOs
+export interface RegistrationOptionsDto {
+  mode: "SelfHosted" | "MultiTenant" | string;
+  allowRegistration: boolean;
+  requiresSubdomain: boolean;
+  trialDays: number;
+}
+
+export interface SubdomainAvailabilityDto {
+  value: string;
+  available: boolean;
+  reason?: string | null;
+  suggestion?: string | null;
+}
+
+export interface PlatformOverviewDto {
+  tenants: number;
+  activeTenants: number;
+  suspendedTenants: number;
+  users: number;
+  activeUsers: number;
+  newUsersLast30Days: number;
+  invoices: number;
+  customers: number;
+  items: number;
+  activeSubscriptions: number;
+  totalInvoiced: number;
+  totalCollected: number;
+  planBreakdown: Record<string, number>;
+  recentTenants: PlatformTenantDto[];
+  recentUsers: PlatformUserDto[];
+  recentActivity: PlatformActivityDto[];
+}
+
+export interface PlatformTenantDto {
+  id: string;
+  name: string;
+  subdomain?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  userCount: number;
+  invoiceCount: number;
+  customerCount: number;
+  itemCount: number;
+  plan?: string | null;
+  subscriptionEndsAt?: string | null;
+  lastActivityAt?: string | null;
+  isCurrent: boolean;
+}
+
+export interface PlatformUserDto {
+  id: string;
+  fullName: string;
+  email?: string | null;
+  role: string;
+  isActive: boolean;
+  tenantId?: string | null;
+  tenantName?: string | null;
+  createdAt: string;
+  lastLoginAt?: string | null;
+  lastSeenAt?: string | null;
+  isOwner: boolean;
+  isCurrent: boolean;
+}
+
+export interface PlatformActivityDto {
+  id: string;
+  tenantName?: string | null;
+  userName?: string | null;
+  action: string;
+  entityType: string;
+  entityLabel?: string | null;
+  createdAt: string;
+}

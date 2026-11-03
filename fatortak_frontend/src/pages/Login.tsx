@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
+import { useQuery } from "@tanstack/react-query";
 import * as Yup from "yup";
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
+import { registrationService } from "../services/registrationService";
+import { unwrapServiceResult } from "../services/api";
 import {
   Eye,
   EyeOff,
@@ -26,6 +29,14 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const { isRTL, t, toggleLanguage, language } = useLanguage();
+  const registrationOptions = useQuery({
+    queryKey: ["registration-options"],
+    queryFn: () => unwrapServiceResult(registrationService.getOptions()),
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+  const canRegister =
+    registrationOptions.data?.data?.allowRegistration === true;
 
   // Login validation schema
   const loginSchema = Yup.object().shape({
@@ -339,21 +350,23 @@ const Login: React.FC = () => {
               </Formik>
 
               {/* Register Link */}
-              {/* <div
-                className={`text-center pt-4 border-t border-slate-200 dark:border-slate-700 ${
-                  isRTL ? "text-end" : ""
-                }`}
-              >
-                <p className="text-slate-600 dark:text-slate-400">
-                  {t("dontHaveAccount")}{" "}
-                  <Link
-                    to="/register"
-                    className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                  >
-                    {t("createAccount")}
-                  </Link>
-                </p>
-              </div> */}
+              {canRegister && (
+                <div
+                  className={`border-t border-slate-200 pt-4 text-center dark:border-slate-700 ${
+                    isRTL ? "text-end" : ""
+                  }`}
+                >
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {isRTL ? "ليس لديك حساب؟" : "New to Fatortak?"}{" "}
+                    <Link
+                      to="/register"
+                      className="font-semibold text-brand-600 transition-colors hover:text-brand-700 dark:text-brand-300 dark:hover:text-brand-200"
+                    >
+                      {isRTL ? "أنشئ مساحة عمل" : "Create a workspace"}
+                    </Link>
+                  </p>
+                </div>
+              )}
               <div className={`text-center ${isRTL ? "text-end" : ""}`}>
                 <Link
                   to="/forgot-password"

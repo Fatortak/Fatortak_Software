@@ -1,4 +1,5 @@
-﻿using fatortak.Common.Enum;
+﻿using fatortak.Common;
+using fatortak.Common.Enum;
 using fatortak.Context;
 using fatortak.Dtos.Shared;
 using fatortak.Dtos.Tenant;
@@ -34,10 +35,23 @@ namespace fatortak.Services.TenantService
                 if (string.IsNullOrWhiteSpace(dto.Name))
                     return ServiceResult<Tenant>.Failure("Tenant name is required");
 
-                // Check subdomain uniqueness
-                if (!string.IsNullOrEmpty(dto.Subdomain))
+                // Normalize and validate the subdomain
+                var subdomain = string.IsNullOrWhiteSpace(dto.Subdomain)
+                    ? null
+                    : SubdomainRules.Normalize(dto.Subdomain);
+
+                if (subdomain != null)
                 {
-                    var exists = await _context.Tenants.AnyAsync(t => t.Subdomain == dto.Subdomain);
+                    var formatError = SubdomainRules.GetFormatError(subdomain);
+                    if (formatError != null)
+                        return ServiceResult<Tenant>.Failure(formatError);
+
+                    if (SubdomainRules.IsReserved(subdomain))
+                        return ServiceResult<Tenant>.Failure(
+                            "That workspace URL is reserved by the platform.");
+
+                    var exists = await _context.Tenants.AnyAsync(t =>
+                        t.Subdomain != null && t.Subdomain.ToLower() == subdomain);
                     if (exists)
                         return ServiceResult<Tenant>.Failure("Subdomain already taken");
                 }
@@ -45,8 +59,8 @@ namespace fatortak.Services.TenantService
                 // Create tenant
                 var tenant = new Tenant
                 {
-                    Name = dto.Name,
-                    Subdomain = dto.Subdomain,
+                    Name = dto.Name.Trim(),
+                    Subdomain = subdomain,
                     IsActive = true
                 };
 

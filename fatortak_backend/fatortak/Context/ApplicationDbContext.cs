@@ -87,6 +87,15 @@ namespace fatortak.Context
             base.OnModelCreating(modelBuilder);
             modelBuilder.HasDefaultSchema("dbo");
 
+            modelBuilder.Entity<Tenant>()
+                .Property(t => t.Subdomain)
+                .HasMaxLength(30);
+
+            modelBuilder.Entity<Tenant>()
+                .HasIndex(t => t.Subdomain)
+                .IsUnique()
+                .HasFilter("[Subdomain] IS NOT NULL");
+
             modelBuilder.Entity<Invoice>()
                 .HasOne(i => i.Customer)
                 .WithMany(c => c.Invoices)
@@ -412,6 +421,11 @@ namespace fatortak.Context
             foreach (var entry in ChangeTracker.Entries<ITenantEntity>()
                 .Where(e => e.State == EntityState.Added))
             {
+                // Explicitly targeted audit entries (for example platform-owner
+                // actions on another tenant) must keep their tenant.
+                if (entry.Entity is AuditLog auditLog && auditLog.TenantId != Guid.Empty)
+                    continue;
+
                 entry.Entity.TenantId = tenant.Id;
             }
         }
